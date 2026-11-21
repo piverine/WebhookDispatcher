@@ -7,6 +7,7 @@ import { jobsRoutes } from "./routes/jobs.js";
 import { mockRoutes } from "./routes/mock.js";
 import { pool, runMigrations } from "./db.js";
 import { globalWorker } from "./worker/worker.js";
+import { getDashboardHtml } from "./ui/dashboard.js";
 
 export async function buildApp() {
   const app = Fastify({
@@ -20,12 +21,25 @@ export async function buildApp() {
     global: false,
   });
 
-  // Root route
-  app.get("/", async (_req, reply) => {
+  // Root and Dashboard routes
+  app.get("/dashboard", async (_req, reply) => {
+    return reply.type("text/html").send(getDashboardHtml());
+  });
+
+  app.get("/", async (req, reply) => {
+    const accept = req.headers.accept || "";
+    // If opened in a web browser, serve the interactive visual dashboard
+    if (accept.includes("text/html")) {
+      return reply.type("text/html").send(getDashboardHtml());
+    }
+
+    // Default to JSON overview for curl and API consumers
     return reply.status(200).send({
       name: "Distributed Webhook Dispatcher Engine",
       status: "online",
+      ui: "Open this URL in a web browser for the interactive dashboard",
       endpoints: {
+        dashboard: "GET /dashboard",
         health: "GET /health",
         dispatch: "POST /api/webhooks/dispatch",
         jobs: "GET /api/webhooks/jobs",
