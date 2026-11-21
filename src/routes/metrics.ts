@@ -10,3 +10,4 @@ export const metricsRoutes: FastifyPluginAsync = async (fastify) => {
       .send(text);
   });
 };
+

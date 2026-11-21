@@ -92,3 +92,4 @@ export const batchRoutes: FastifyPluginAsync = async (fastify) => {
     }
   );
 };
+

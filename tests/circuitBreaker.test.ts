@@ -51,3 +51,4 @@ describe("Advanced: Destination Circuit Breaker", () => {
     expect(cb.getStatus(host).consecutiveFailures).toBe(0);
   });
 });
+

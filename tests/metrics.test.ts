@@ -36,3 +36,4 @@ describe("Advanced: Prometheus Metrics Exposition", () => {
     expect(body).toContain('webhook_queue_depth{status="queued"}');
   });
 });
+

@@ -52,3 +52,4 @@ export const streamRoutes: FastifyPluginAsync = async (fastify) => {
     await new Promise(() => {});
   });
 };
+

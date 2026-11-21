@@ -3,3 +3,4 @@ export interface IRateLimiter {
   msUntilToken(host: string): Promise<number> | number;
   reset?(host?: string): Promise<void> | void;
 }
+
