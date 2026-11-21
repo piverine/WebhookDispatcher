@@ -54,6 +54,22 @@ export async function startServer() {
   globalWorker.start();
   app.log.info("Worker poll loop started");
 
+  // Error handling around process lifecycle
+  process.on("unhandledRejection", (reason) => {
+    app.log.error({ reason }, "Unhandled promise rejection detected");
+  });
+
+  process.on("uncaughtException", (err) => {
+    app.log.fatal({ err }, "Uncaught exception, initiating graceful shutdown");
+    globalWorker.stop().finally(() => {
+      app.close().finally(() => {
+        pool.end().finally(() => {
+          process.exit(1);
+        });
+      });
+    });
+  });
+
   // Graceful shutdown
   const signals: NodeJS.Signals[] = ["SIGINT", "SIGTERM"];
   for (const signal of signals) {

@@ -3,6 +3,7 @@ import { FastifyPluginAsync } from "fastify";
 interface MockHitStats {
   totalHits: number;
   hitsPerEventId: Record<string, number>;
+  lastHeaders?: Record<string, string | string[] | undefined>;
 }
 
 const stats: MockHitStats = {
@@ -14,7 +15,7 @@ export const mockRoutes: FastifyPluginAsync = async (fastify) => {
   // POST /mock/receiver
   fastify.post<{
     Querystring: {
-      mode?: "ok" | "fail" | "rate" | "slow" | "flaky";
+      mode?: "ok" | "fail" | "rate" | "slow" | "flaky" | "redirect";
       delay?: string;
       failFirst?: string;
     };
@@ -28,9 +29,16 @@ export const mockRoutes: FastifyPluginAsync = async (fastify) => {
 
     stats.totalHits++;
     stats.hitsPerEventId[eventId] = (stats.hitsPerEventId[eventId] || 0) + 1;
+    stats.lastHeaders = req.headers as Record<string, string | string[] | undefined>;
     const hitCount = stats.hitsPerEventId[eventId];
 
     switch (mode) {
+      case "redirect":
+        return reply
+          .status(302)
+          .header("Location", "/mock/receiver?mode=ok")
+          .send({ redirect: true });
+
       case "fail":
         return reply.status(500).send({ error: "mock_failure" });
 
@@ -73,6 +81,7 @@ export const mockRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post("/mock/receiver/reset", async (_req, reply) => {
     stats.totalHits = 0;
     stats.hitsPerEventId = {};
+    stats.lastHeaders = undefined;
     return reply.status(200).send({ reset: true });
   });
 };
