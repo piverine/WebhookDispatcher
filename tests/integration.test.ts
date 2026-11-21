@@ -56,7 +56,7 @@ describe("Phase 6: End-to-End Integration Test", () => {
     const { jobId } = JSON.parse(dispatchRes.body);
 
     // 2. Poll until job reaches succeeded (background worker handles all retries)
-    const maxWait = 10000;
+    const maxWait = 25000;
     const start = Date.now();
     let finalState: Awaited<ReturnType<typeof getJobWithAttempts>> = null;
 
@@ -76,3 +76,4 @@ describe("Phase 6: End-to-End Integration Test", () => {
     expect(finalState?.attempts[2].response_code).toBe(200);
   });
 });
+

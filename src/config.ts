@@ -55,3 +55,4 @@ export function logSafeConfig(logger: { info: (obj: object, msg: string) => void
     "Application configuration loaded"
   );
 }
+

@@ -56,3 +56,4 @@ describe("Phase 6: URL Guard (SSRF Protection)", () => {
     expect(validateDestinationUrl("://bad", false).valid).toBe(false);
   });
 });
+

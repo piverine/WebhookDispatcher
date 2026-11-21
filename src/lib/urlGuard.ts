@@ -77,3 +77,4 @@ export function validateDestinationUrl(urlString: string, allowPrivate = config.
 
   return { valid: true, url: parsed };
 }
+

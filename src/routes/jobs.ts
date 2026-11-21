@@ -58,3 +58,4 @@ export const jobsRoutes: FastifyPluginAsync = async (fastify) => {
     });
   });
 };
+

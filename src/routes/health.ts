@@ -10,3 +10,4 @@ export const healthRoutes: FastifyPluginAsync = async (fastify) => {
     return reply.status(200).send({ ok: true });
   });
 };
+

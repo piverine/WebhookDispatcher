@@ -45,3 +45,4 @@ export async function runMigrations(logger?: { info: (msg: string) => void; erro
     throw err;
   }
 }
+

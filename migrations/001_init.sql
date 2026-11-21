@@ -30,3 +30,4 @@ CREATE TABLE IF NOT EXISTS delivery_attempts (
 );
 
 CREATE INDEX IF NOT EXISTS attempts_job_idx ON delivery_attempts (job_id);
+
