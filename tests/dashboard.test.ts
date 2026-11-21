@@ -57,3 +57,4 @@ describe("Frontend Dashboard Route", () => {
     expect(body.endpoints).toBeDefined();
   });
 });
+
