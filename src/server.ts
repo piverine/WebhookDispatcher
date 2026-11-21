@@ -15,11 +15,9 @@ export async function buildApp() {
     bodyLimit: 100 * 1024, // 100 KB limit as required in spec 3.7
   });
 
-  // Global ingestion rate limiter
+  // Register rate limit plugin (route-scoped)
   await app.register(rateLimit, {
-    max: config.ingestRateLimitPerMin,
-    timeWindow: "1 minute",
-    allowList: ["127.0.0.1"],
+    global: false,
   });
 
   // Register routes
