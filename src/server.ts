@@ -4,7 +4,9 @@ import { config, logSafeConfig } from "./config.js";
 import { healthRoutes } from "./routes/health.js";
 import { dispatchRoutes } from "./routes/dispatch.js";
 import { jobsRoutes } from "./routes/jobs.js";
+import { mockRoutes } from "./routes/mock.js";
 import { pool, runMigrations } from "./db.js";
+import { globalWorker } from "./worker/worker.js";
 
 export async function buildApp() {
   const app = Fastify({
@@ -24,6 +26,7 @@ export async function buildApp() {
   await app.register(healthRoutes);
   await app.register(dispatchRoutes);
   await app.register(jobsRoutes);
+  await app.register(mockRoutes);
 
   return app;
 }
@@ -49,12 +52,17 @@ export async function startServer() {
     process.exit(1);
   }
 
+  // Start background worker loop
+  globalWorker.start();
+  app.log.info("Worker poll loop started");
+
   // Graceful shutdown
   const signals: NodeJS.Signals[] = ["SIGINT", "SIGTERM"];
   for (const signal of signals) {
     process.on(signal, async () => {
       app.log.info(`Received ${signal}, shutting down gracefully...`);
       try {
+        await globalWorker.stop();
         await app.close();
         await pool.end();
         app.log.info("Server closed successfully");
