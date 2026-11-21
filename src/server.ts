@@ -2,7 +2,9 @@ import Fastify from "fastify";
 import rateLimit from "@fastify/rate-limit";
 import { config, logSafeConfig } from "./config.js";
 import { healthRoutes } from "./routes/health.js";
-import { pool } from "./db.js";
+import { dispatchRoutes } from "./routes/dispatch.js";
+import { jobsRoutes } from "./routes/jobs.js";
+import { pool, runMigrations } from "./db.js";
 
 export async function buildApp() {
   const app = Fastify({
@@ -18,13 +20,23 @@ export async function buildApp() {
     allowList: ["127.0.0.1"],
   });
 
-  // Health route
+  // Register routes
   await app.register(healthRoutes);
+  await app.register(dispatchRoutes);
+  await app.register(jobsRoutes);
 
   return app;
 }
 
 export async function startServer() {
+  // Run migrations on startup
+  try {
+    await runMigrations();
+  } catch (err) {
+    console.error("Migration failed:", err);
+    process.exit(1);
+  }
+
   const app = await buildApp();
 
   logSafeConfig(app.log);
