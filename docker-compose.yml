@@ -1,0 +1,63 @@
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: webhook-dispatcher-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - DATABASE_URL=postgresql://dispatcher:dispatcher_secret@postgres:5432/dispatcher_db?sslmode=disable
+      - REDIS_URL=redis://redis:6379
+      - WORKER_CONCURRENCY=5
+      - POLL_INTERVAL_MS=500
+      - DELIVERY_TIMEOUT_MS=5000
+      - MAX_ATTEMPTS=4
+      - BACKOFF_BASE_MS=2000
+      - RATE_BUCKET_CAPACITY=5
+      - RATE_REFILL_PER_SEC=2
+      - INGEST_RATE_LIMIT_PER_MIN=100
+      - ALLOW_PRIVATE_DESTINATIONS=true
+      - WEBHOOK_SIGNING_SECRET=whsec_local_docker_compose_secret_key_12345
+      - CIRCUIT_BREAKER_FAILURES=5
+      - CIRCUIT_BREAKER_COOLDOWN_MS=30000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: webhook-dispatcher-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: dispatcher
+      POSTGRES_PASSWORD: dispatcher_secret
+      POSTGRES_DB: dispatcher_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dispatcher -d dispatcher_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: webhook-dispatcher-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+
+volumes:
+  pgdata:
+  redisdata:

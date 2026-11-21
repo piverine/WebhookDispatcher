@@ -3,7 +3,11 @@ import rateLimit from "@fastify/rate-limit";
 import { config, logSafeConfig } from "./config.js";
 import { healthRoutes } from "./routes/health.js";
 import { dispatchRoutes } from "./routes/dispatch.js";
+import { batchRoutes } from "./routes/batch.js";
 import { jobsRoutes } from "./routes/jobs.js";
+import { dlqRoutes } from "./routes/dlq.js";
+import { metricsRoutes } from "./routes/metrics.js";
+import { streamRoutes } from "./routes/stream.js";
 import { mockRoutes } from "./routes/mock.js";
 import { pool, runMigrations } from "./db.js";
 import { globalWorker } from "./worker/worker.js";
@@ -35,15 +39,21 @@ export async function buildApp() {
 
     // Default to JSON overview for curl and API consumers
     return reply.status(200).send({
-      name: "Distributed Webhook Dispatcher Engine",
+      name: "Distributed Webhook Dispatcher Engine (Advanced)",
       status: "online",
       ui: "Open this URL in a web browser for the interactive dashboard",
       endpoints: {
         dashboard: "GET /dashboard",
         health: "GET /health",
         dispatch: "POST /api/webhooks/dispatch",
+        batchDispatch: "POST /api/webhooks/dispatch/batch",
         jobs: "GET /api/webhooks/jobs",
         jobDetail: "GET /api/webhooks/jobs/:jobId",
+        dlq: "GET /api/webhooks/dlq",
+        dlqReplay: "POST /api/webhooks/dlq/:jobId/replay",
+        dlqReplayAll: "POST /api/webhooks/dlq/replay-all",
+        metrics: "GET /metrics",
+        liveStream: "GET /api/webhooks/stream",
         mockReceiver: "POST /mock/receiver",
         mockStats: "GET /mock/receiver/stats",
       },
@@ -54,7 +64,11 @@ export async function buildApp() {
   // Register routes
   await app.register(healthRoutes);
   await app.register(dispatchRoutes);
+  await app.register(batchRoutes);
   await app.register(jobsRoutes);
+  await app.register(dlqRoutes);
+  await app.register(metricsRoutes);
+  await app.register(streamRoutes);
   await app.register(mockRoutes);
 
   return app;

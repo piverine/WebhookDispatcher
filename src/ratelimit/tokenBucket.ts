@@ -1,4 +1,5 @@
 import { config } from "../config.js";
+import { IRateLimiter } from "./rateLimiter.interface.js";
 
 interface BucketState {
   tokens: number;
@@ -11,7 +12,7 @@ interface BucketState {
  * Capacity: max burst tokens allowed (default: 5)
  * Refill rate: tokens added per second (default: 2)
  */
-export class TokenBucketLimiter {
+export class TokenBucketLimiter implements IRateLimiter {
   private buckets = new Map<string, BucketState>();
   private readonly capacity: number;
   private readonly refillPerSec: number;

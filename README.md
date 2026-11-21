@@ -97,7 +97,65 @@ Retrieves the current state and complete delivery attempt history of a job.
   ```
 - **Response `404 Not Found`:** `{ "error": "job_not_found" }`
 
-### 2.3 `GET /api/webhooks/jobs`
+### 2.3 `POST /api/webhooks/dispatch/batch` (Advanced)
+Atomically enqueues a batch of up to 100 webhook delivery jobs in a single multi-row `INSERT ... ON CONFLICT (event_id) DO NOTHING` statement.
+
+- **Request Body:**
+  ```json
+  {
+    "jobs": [
+      {
+        "destinationUrl": "https://api.partner.com/webhook",
+        "eventId": "evt_bulk_1",
+        "payload": { "orderId": "ord_101" }
+      },
+      {
+        "destinationUrl": "https://api.partner.com/webhook",
+        "eventId": "evt_bulk_2",
+        "payload": { "orderId": "ord_102" }
+      }
+    ]
+  }
+  ```
+- **Responses:**
+  - `202 Accepted`:
+    ```json
+    {
+      "status": "queued",
+      "total": 2,
+      "accepted": 2,
+      "duplicates": 0,
+      "jobs": [
+        { "eventId": "evt_bulk_1", "jobId": "...", "status": "queued", "duplicate": false },
+        { "eventId": "evt_bulk_2", "jobId": "...", "status": "queued", "duplicate": false }
+      ]
+    }
+    ```
+  - `400 Bad Request`: Validation failure or batch size > 100.
+
+### 2.4 Dead-Letter Queue (DLQ) & Manual Redrive API (Advanced)
+Provides complete visibility and operational control over jobs that have permanently exhausted all retry attempts.
+
+- **`GET /api/webhooks/dlq`**: List dead jobs with pagination and optional search filter:
+  - Query parameters: `?limit=20&offset=0&search=api.partner.com`
+  - Returns: `{ "total": 1, "jobs": [...] }`
+- **`POST /api/webhooks/dlq/:jobId/replay`**: Manually redrive a failed job. Resets attempt count to 0, clears last error, sets status to `queued`, and immediately puts it back into delivery rotation.
+- **`POST /api/webhooks/dlq/replay-all`**: Bulk redrive all dead-letter jobs back into the active queue.
+
+### 2.5 `GET /metrics` - Prometheus Observability (Advanced)
+Returns real-time system metrics in standard Prometheus text exposition format:
+- `webhook_jobs_enqueued_total` (counter)
+- `webhook_jobs_batch_enqueued_total` (counter)
+- `webhook_delivery_attempts_total{status="success|failed|retrying|rate_limited"}` (counter)
+- `webhook_queue_depth{status="queued|processing|retrying|succeeded|failed"}` (gauge)
+- `webhook_circuit_breaker_trips_total` (counter)
+- `webhook_rate_limit_throttled_total` (counter)
+- `webhook_dlq_redrives_total` (counter)
+
+### 2.6 `GET /api/webhooks/stream` - Real-Time Server-Sent Events (SSE) (Advanced)
+Maintains a persistent HTTP connection pushing real-time delivery lifecycle events (`job:enqueued`, `job:attempt`, `job:succeeded`, `job:retrying`, `job:failed`, `job:redriven`, `circuit:tripped`). Supports Redis Pub/Sub in multi-node clusters.
+
+### 2.7 `GET /api/webhooks/jobs`
 List recent jobs. Supports optional query parameters:
 - `?status=`: filter by `queued | processing | retrying | succeeded | failed`
 - `?limit=`: number of jobs (default: 20, max: 100)
@@ -167,7 +225,7 @@ A built-in test receiver simulating various downstream behaviors:
    The HTTP endpoint `POST /api/webhooks/dispatch` never performs outbound network requests. It validates schemas, saves the job to Postgres in a single parameterized query, and immediately returns `202 Accepted` in < 15ms.
 
 2. **Durable Database Queue (`FOR UPDATE SKIP LOCKED`):**
-   No Redis dependency. PostgreSQL serves as the persistent queue. Workers claim batch jobs using:
+   PostgreSQL serves as the persistent durable queue. Workers claim batch jobs using:
    ```sql
    WITH due AS (
      SELECT id FROM jobs
@@ -200,16 +258,64 @@ A built-in test receiver simulating various downstream behaviors:
    - **HTTP 429 `Retry-After`:** If downstream responds with 429 and a `Retry-After: N` header, the delay is set to `max(exponentialBackoff, RetryAfter * 1000)`.
    - **Non-retryable errors:** 4xx client errors (e.g. 400, 401, 403, 404) and 3xx redirects fail immediately on Attempt 1 without wasting retries.
 
-5. **Rate Limiting:**
-   - **Per-Destination Host Token Bucket:** Prevents flooding downstream receivers. Default: capacity = 5 tokens, refill = 2 tokens/sec. When tokens are exhausted, the job is rescheduled with a new `next_attempt_at`. **Crucially, no attempt count is consumed for rate-limited delays.**
+5. **Rate Limiting & Distributed Redis Token Bucket:**
+   - **Hybrid Rate Limiter (`IRateLimiter`):** Supports both in-memory `TokenBucketLimiter` and distributed `RedisTokenBucketLimiter`.
+   - **Distributed Redis Token Bucket:** When `REDIS_URL` is set, rate-limiting is enforced globally across all cluster nodes using an atomic Lua script (`EVAL`), preventing cluster-wide race conditions.
+   - **Token Bucket Guarantees:** Default capacity = 5 tokens, refill = 2 tokens/sec per destination host. When tokens are exhausted, the job is rescheduled with a new `next_attempt_at`. **Crucially, no attempt count is consumed for rate-limited delays.**
    - **Ingestion Limiter:** `@fastify/rate-limit` enforces 100 requests/minute per client IP on the dispatch route.
    - **Worker Concurrency Cap:** Maximum 5 simultaneous outbound deliveries in flight.
 
-6. **Idempotency & Security:**
+6. **Destination Circuit Breaker Pattern (`DestinationCircuitBreaker`):**
+   - Tracks consecutive downstream failures (5xx, timeouts, network failures) per destination host.
+   - When a host exceeds the failure threshold (default: 5 consecutive failures), the circuit trips **`OPEN`** for a cooldown period (default: 30 seconds).
+   - In the **`OPEN`** state, outgoing deliveries to that host are fast-rescheduled without burning worker concurrency or sockets.
+   - After cooldown, transitions to **`HALF_OPEN`** to probe the destination with a single test job. If it succeeds, the circuit closes back to **`CLOSED`**; if it fails, it trips back to **`OPEN`**.
+
+7. **Dead-Letter Queue (DLQ) & Manual Redrive:**
+   - Once all 4 attempts are exhausted, the job is marked `status = 'failed'` with `last_error` and preserved in PostgreSQL.
+   - Operational endpoints (`GET /api/webhooks/dlq`, `POST /api/webhooks/dlq/:jobId/replay`, `POST /api/webhooks/dlq/replay-all`) allow operators to inspect failure reasons and manually redrive jobs back to `queued` with attempt counts reset.
+
+8. **Unified EventBus & Real-Time SSE:**
+   - Emits real-time lifecycle events (`job:enqueued`, `job:attempt`, `job:succeeded`, `job:retrying`, `job:failed`, `job:redriven`, `circuit:tripped`).
+   - Powered by Redis Pub/Sub in multi-node clusters and falling back to Node.js `EventEmitter`.
+   - Broadcasts live to web browsers via Server-Sent Events (`/api/webhooks/stream`).
+
+9. **Idempotency & Security:**
    - **Event Deduplication:** Unique index on `event_id`. Duplicate dispatches return the existing `jobId` with `{ "duplicate": true }` without creating duplicate jobs.
    - **SSRF Protection:** `urlGuard` blocks private and local addresses (`localhost`, `127.0.0.0/8`, `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `169.254.0.0/16`, `::1`).
    - **Payload HMAC Signing:** If `WEBHOOK_SIGNING_SECRET` is set, requests include `X-Webhook-Signature` (HMAC SHA-256 hex digest of the raw JSON body).
    - **Request Limits:** Fastify enforces a strict 100 KB payload body limit.
+
+---
+
+## 4. Docker & Local Development Setup
+
+To run the entire distributed stack (Webhook Dispatcher + PostgreSQL 16 + Redis 7) locally with a single command:
+
+```bash
+docker compose up --build
+```
+
+Services started:
+- **`app`**: Webhook Dispatcher Engine on `http://localhost:3000`
+- **`postgres`**: PostgreSQL 16 on `localhost:5432` (database: `dispatcher_db`)
+- **`redis`**: Redis 7 on `localhost:6379` (distributed token bucket & pub/sub)
+
+---
+
+## 5. Architectural Q&A & Interview Concepts
+
+### Core Conceptual Question:
+> **Scenario:** A client sends a request to your API. Your API saves the job and returns `202 Accepted`. The destination server is still down. What should happen next?
+>
+> - **A.** The API should wait until the destination server comes back online.
+> - **B. The background worker should retry delivery using exponential backoff.** *(Correct)*
+> - **C.** The job should immediately be deleted.
+> - **D.** The client should send the request again.
+
+**Engineering Explanation:**
+In an asynchronous, resilient webhook architecture, the ingestion API has already completed its responsibility by accepting and durably persisting the delivery intent (`202 Accepted`). The background worker is decoupled and autonomous. When the destination server fails, the worker must not discard the message or block other deliveries. Instead, it computes an exponential backoff schedule ($Delay = 2^n \text{ seconds}$) with jitter and schedules the next delivery attempt, preserving event durability and decoupling upstream ingestion from downstream instability.
+
 
 ---
 

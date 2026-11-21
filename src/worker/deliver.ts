@@ -1,5 +1,8 @@
 import { config } from "../config.js";
 import { signPayload } from "../lib/signature.js";
+import { globalCircuitBreaker } from "../lib/circuitBreaker.js";
+import { eventBus } from "../lib/events.js";
+import { metrics } from "../lib/metrics.js";
 import {
   JobRow,
   markFailed,
@@ -8,7 +11,8 @@ import {
   recordAttempt,
   rescheduleRateLimited,
 } from "../queue/jobs.repo.js";
-import { defaultLimiter, TokenBucketLimiter } from "../ratelimit/tokenBucket.js";
+import { IRateLimiter } from "../ratelimit/rateLimiter.interface.js";
+import { defaultLimiter } from "../ratelimit/tokenBucket.js";
 import { computeBackoffDelay } from "./backoff.js";
 
 export interface DeliveryLogger {
@@ -19,19 +23,35 @@ export interface DeliveryLogger {
 
 /**
  * Executes delivery of a single job.
- * Handles rate-limiting, HTTP dispatch, result classification, retries, and recording.
+ * Handles circuit breaker, rate-limiting, HTTP dispatch, result classification, retries, and recording.
  */
 export async function deliverJob(
   job: JobRow,
-  limiter: TokenBucketLimiter = defaultLimiter,
+  limiter: IRateLimiter = defaultLimiter,
   logger?: DeliveryLogger
 ): Promise<void> {
-  // 1. Rate limiter check (per destination host)
-  if (!limiter.tryTake(job.destination_host)) {
-    const waitMs = limiter.msUntilToken(job.destination_host);
+  // 1. Circuit breaker check (per destination host)
+  if (globalCircuitBreaker.isOpen(job.destination_host)) {
+    const cooldownMs = globalCircuitBreaker.getCooldownRemainingMs(job.destination_host);
+    const nextAttemptAt = new Date(Date.now() + Math.max(cooldownMs, 1000));
+    await rescheduleRateLimited(job.id, nextAttemptAt);
+    metrics.incCircuitBreakerTrip();
+    eventBus.emit("circuit:tripped", { host: job.destination_host, cooldownMs });
+    logger?.warn(
+      { jobId: job.id, host: job.destination_host, cooldownMs },
+      "Circuit breaker OPEN for host, delivery fast-rescheduled"
+    );
+    return;
+  }
+
+  // 2. Rate limiter check (per destination host)
+  const allowed = await limiter.tryTake(job.destination_host);
+  if (!allowed) {
+    const waitMs = await limiter.msUntilToken(job.destination_host);
     const nextAttemptAt = new Date(Date.now() + waitMs);
     // Hard rule: No attempt consumed when rate-limited. Reschedule job with new next_attempt_at.
     await rescheduleRateLimited(job.id, nextAttemptAt);
+    metrics.incRateLimitThrottled();
     logger?.info(
       { jobId: job.id, host: job.destination_host, waitMs },
       "Job rate-limited by token bucket, rescheduled"
@@ -96,6 +116,7 @@ export async function deliverJob(
     responseCode >= 500;
 
   if (is2xx) {
+    globalCircuitBreaker.recordSuccess(job.destination_host);
     await recordAttempt(
       job.id,
       attempt,
@@ -105,6 +126,21 @@ export async function deliverJob(
       durationMs
     );
     await markSucceeded(job.id, attempt);
+    metrics.incAttempt("success", durationMs);
+    eventBus.emit("job:succeeded", {
+      jobId: job.id,
+      eventId: job.event_id,
+      destinationUrl: job.destination_url,
+      durationMs,
+    });
+    eventBus.emit("job:attempt", {
+      jobId: job.id,
+      attempt,
+      status: "success",
+      responseCode,
+      durationMs,
+      error: null,
+    });
     logger?.info(
       { jobId: job.id, attempt, responseCode, durationMs },
       "Job delivered successfully"
@@ -113,6 +149,8 @@ export async function deliverJob(
   }
 
   if (isRetryable) {
+    globalCircuitBreaker.recordFailure(job.destination_host);
+
     if (attempt >= job.max_attempts) {
       const errorMsg =
         responseError || `HTTP status ${responseCode} (max attempts reached)`;
@@ -125,6 +163,22 @@ export async function deliverJob(
         durationMs
       );
       await markFailed(job.id, attempt, errorMsg);
+      metrics.incAttempt("failed", durationMs);
+      eventBus.emit("job:failed", {
+        jobId: job.id,
+        eventId: job.event_id,
+        destinationUrl: job.destination_url,
+        attempts: attempt,
+        error: errorMsg,
+      });
+      eventBus.emit("job:attempt", {
+        jobId: job.id,
+        attempt,
+        status: "failed",
+        responseCode,
+        durationMs,
+        error: errorMsg,
+      });
       logger?.warn(
         { jobId: job.id, attempt, responseCode, durationMs, error: errorMsg },
         "Job failed permanently after exhausting all retry attempts"
@@ -150,6 +204,22 @@ export async function deliverJob(
         durationMs
       );
       await markRetry(job.id, attempt, nextAttemptAt, errorMsg);
+      metrics.incAttempt("retrying", durationMs);
+      eventBus.emit("job:retrying", {
+        jobId: job.id,
+        attempt,
+        nextAttemptAt: nextAttemptAt.toISOString(),
+        delayMs,
+        error: errorMsg,
+      });
+      eventBus.emit("job:attempt", {
+        jobId: job.id,
+        attempt,
+        status: "retrying",
+        responseCode,
+        durationMs,
+        error: errorMsg,
+      });
       logger?.info(
         { jobId: job.id, attempt, responseCode, delayMs, nextAttemptAt },
         "Job scheduled for retry"
@@ -170,6 +240,22 @@ export async function deliverJob(
     durationMs
   );
   await markFailed(job.id, attempt, errorMsg);
+  metrics.incAttempt("failed", durationMs);
+  eventBus.emit("job:failed", {
+    jobId: job.id,
+    eventId: job.event_id,
+    destinationUrl: job.destination_url,
+    attempts: attempt,
+    error: errorMsg,
+  });
+  eventBus.emit("job:attempt", {
+    jobId: job.id,
+    attempt,
+    status: "failed",
+    responseCode,
+    durationMs,
+    error: errorMsg,
+  });
   logger?.warn(
     { jobId: job.id, attempt, responseCode, durationMs, error: errorMsg },
     "Job failed permanently (non-retryable response code)"

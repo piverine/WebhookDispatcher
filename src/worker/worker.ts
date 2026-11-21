@@ -1,6 +1,7 @@
 import { config } from "../config.js";
 import { claimDueJobs, rescheduleRateLimited } from "../queue/jobs.repo.js";
-import { defaultLimiter, TokenBucketLimiter } from "../ratelimit/tokenBucket.js";
+import { IRateLimiter } from "../ratelimit/rateLimiter.interface.js";
+import { createRateLimiter, defaultLimiter } from "../ratelimit/limiterFactory.js";
 import { deliverJob, DeliveryLogger } from "./deliver.js";
 
 export class WorkerManager {
@@ -9,10 +10,10 @@ export class WorkerManager {
   private inFlight = 0;
   private isStopping = false;
   private logger?: DeliveryLogger;
-  private limiter: TokenBucketLimiter;
+  private limiter: IRateLimiter;
   private activeDeliveries = new Set<Promise<void>>();
 
-  constructor(logger?: DeliveryLogger, limiter: TokenBucketLimiter = defaultLimiter) {
+  constructor(logger?: DeliveryLogger, limiter: IRateLimiter = defaultLimiter) {
     this.logger = logger;
     this.limiter = limiter;
   }
@@ -108,4 +109,4 @@ export class WorkerManager {
   }
 }
 
-export const globalWorker = new WorkerManager();
+export const globalWorker = new WorkerManager(undefined, createRateLimiter());

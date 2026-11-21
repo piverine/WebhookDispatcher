@@ -400,6 +400,13 @@ export function getDashboardHtml(): string {
           <div class="pulse-dot"></div>
           <span id="healthText">Checking DB...</span>
         </div>
+        <div class="status-badge" id="sseBadge" style="background: rgba(99, 102, 241, 0.1); border-color: rgba(99, 102, 241, 0.3); color: #a5b4fc;">
+          <div class="pulse-dot" style="background: #a5b4fc; box-shadow: 0 0 10px #a5b4fc;"></div>
+          <span id="sseText">SSE Connecting...</span>
+        </div>
+        <a href="/metrics" target="_blank" style="color: #38bdf8; text-decoration: none; font-size: 0.8rem; font-weight: 600;">
+          Prometheus &rarr;
+        </a>
         <a href="https://github.com/piverine/WebhookDispatcher" target="_blank" style="color: var(--text-muted); text-decoration: none; font-size: 0.8rem; font-weight: 600;">
           GitHub &rarr;
         </a>
@@ -433,6 +440,10 @@ export function getDashboardHtml(): string {
           <button class="btn-preset" onclick="setPreset('slow')">
             ⏳ Slow Downstream
             <span>10s wait (dispatch fast)</span>
+          </button>
+          <button class="btn-preset" onclick="runBatchTest()">
+            📦 5x Batch Ingest
+            <span>Multi-row atomic insert</span>
           </button>
         </div>
 
@@ -518,6 +529,39 @@ export function getDashboardHtml(): string {
             <tbody id="jobsTableBody">
               <tr>
                 <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading jobs...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Dead-Letter Queue (DLQ) Card -->
+      <div class="card">
+        <div class="card-header">
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <div class="card-title">💀 Dead-Letter Queue (DLQ)</div>
+            <span id="dlqCountBadge" class="badge badge-failed">0 Dead Jobs</span>
+          </div>
+          <button onclick="replayAllDlq()" class="btn-preset" style="padding: 0.3rem 0.6rem; color: #f87171; border-color: rgba(239, 68, 68, 0.4);">
+            🔄 Replay All DLQ
+          </button>
+        </div>
+        <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+          Jobs that exhausted all 4 retry attempts or encountered non-retryable errors. 1-click redrive back into active queue.
+        </p>
+        <div class="table-container" style="max-height: 220px; overflow-y: auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Event ID</th>
+                <th>Destination</th>
+                <th>Last Error</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="dlqTableBody">
+              <tr>
+                <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No dead-letter jobs.</td>
               </tr>
             </tbody>
           </table>
@@ -767,11 +811,129 @@ export function getDashboardHtml(): string {
       }
     }
 
+    // Fetch Dead-Letter Queue (DLQ)
+    async function fetchDlq() {
+      try {
+        const res = await fetch('/api/webhooks/dlq?limit=20');
+        const data = await res.json();
+        const tbody = document.getElementById('dlqTableBody');
+        const badge = document.getElementById('dlqCountBadge');
+        if (badge) badge.textContent = \`\${data.total} Dead Jobs\`;
+
+        if (!data.jobs || data.jobs.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No dead-letter jobs.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = data.jobs.map(j => \`
+          <tr>
+            <td class="mono" style="color: #f87171;">\${j.eventId}</td>
+            <td style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-muted);">\${j.destinationUrl}</td>
+            <td style="font-size: 0.72rem; color: #f87171; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">\${j.lastError || 'Failed'}</td>
+            <td>
+              <button onclick="replayDlqJob('\${j.jobId}')" class="btn-preset" style="padding: 0.2rem 0.5rem; font-size: 0.7rem; color: #34d399; border-color: rgba(16, 185, 129, 0.4);">
+                Redrive
+              </button>
+            </td>
+          </tr>
+        \`).join('');
+      } catch (e) {
+        console.error("Error fetching DLQ:", e);
+      }
+    }
+
+    async function replayDlqJob(jobId) {
+      try {
+        const res = await fetch('/api/webhooks/dlq/' + jobId + '/replay', { method: 'POST' });
+        if (res.ok) {
+          fetchDlq();
+          fetchJobs();
+        }
+      } catch (e) {}
+    }
+
+    async function replayAllDlq() {
+      try {
+        const res = await fetch('/api/webhooks/dlq/replay-all', { method: 'POST' });
+        if (res.ok) {
+          fetchDlq();
+          fetchJobs();
+        }
+      } catch (e) {}
+    }
+
+    async function runBatchTest() {
+      const now = Date.now();
+      const batch = [];
+      for (let i = 1; i <= 5; i++) {
+        batch.push({
+          destinationUrl: baseUrl + '/mock/receiver?mode=ok',
+          eventId: 'evt_batch_' + i + '_' + now,
+          payload: { batchIndex: i, timestamp: now }
+        });
+      }
+
+      const resultBox = document.getElementById('dispatchResult');
+      try {
+        const res = await fetch('/api/webhooks/dispatch/batch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ jobs: batch })
+        });
+        const data = await res.json();
+        resultBox.className = 'dispatch-result success';
+        resultBox.textContent = \`Batch 202 Accepted: \${data.accepted} queued, \${data.duplicates} duplicates\`;
+        fetchJobs();
+      } catch (e) {
+        resultBox.className = 'dispatch-result error';
+        resultBox.textContent = 'Batch dispatch failed: ' + e.message;
+      }
+    }
+
+    // Server-Sent Events (SSE) Real-Time Stream
+    function initSSE() {
+      const sseText = document.getElementById('sseText');
+      const sseBadge = document.getElementById('sseBadge');
+      try {
+        const source = new EventSource('/api/webhooks/stream');
+        source.addEventListener('connected', () => {
+          if (sseText) sseText.textContent = 'SSE Live (Real-Time)';
+          if (sseBadge) {
+            sseBadge.style.color = '#34d399';
+            sseBadge.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+          }
+        });
+
+        const onEvent = () => {
+          fetchJobs();
+          fetchDlq();
+        };
+
+        source.addEventListener('job:enqueued', onEvent);
+        source.addEventListener('job:attempt', onEvent);
+        source.addEventListener('job:succeeded', onEvent);
+        source.addEventListener('job:retrying', onEvent);
+        source.addEventListener('job:failed', onEvent);
+        source.addEventListener('job:redriven', onEvent);
+        source.addEventListener('circuit:tripped', onEvent);
+
+        source.onerror = () => {
+          if (sseText) sseText.textContent = 'SSE Reconnecting...';
+          if (sseBadge) sseBadge.style.color = '#fbbf24';
+        };
+      } catch (e) {
+        if (sseText) sseText.textContent = 'SSE Disabled';
+      }
+    }
+
     // Init
     setPreset('ok');
     checkHealth();
     fetchJobs();
-    setInterval(fetchJobs, 2500);
+    fetchDlq();
+    initSSE();
+    setInterval(fetchJobs, 3000);
+    setInterval(fetchDlq, 5000);
     setInterval(checkHealth, 10000);
   </script>
 </body>

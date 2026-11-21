@@ -3,6 +3,8 @@ import { z } from "zod";
 import { config } from "../config.js";
 import { validateDestinationUrl } from "../lib/urlGuard.js";
 import { enqueue } from "../queue/jobs.repo.js";
+import { metrics } from "../lib/metrics.js";
+import { eventBus } from "../lib/events.js";
 
 const dispatchSchema = z.object({
   destinationUrl: z.string().url("Must be a valid URL"),
@@ -59,6 +61,13 @@ export const dispatchRoutes: FastifyPluginAsync = async (fastify) => {
         destinationUrl,
         destinationHost,
         payload,
+      });
+
+      metrics.incEnqueued(1, false);
+      eventBus.emit("job:enqueued", {
+        jobId: job.id,
+        eventId: job.event_id,
+        destinationUrl: job.destination_url,
       });
 
       if (duplicate) {

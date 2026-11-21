@@ -250,3 +250,185 @@ export async function listJobs(options: { status?: string; limit?: number }): Pr
   return res.rows;
 }
 
+export interface BatchEnqueueResult {
+  total: number;
+  accepted: number;
+  duplicates: number;
+  jobs: Array<{
+    eventId: string;
+    jobId: string;
+    status: string;
+    duplicate: boolean;
+  }>;
+}
+
+/**
+ * Atomically enqueues a batch of jobs in a single multi-row INSERT statement.
+ */
+export async function enqueueBatch(inputs: EnqueueInput[]): Promise<BatchEnqueueResult> {
+  if (inputs.length === 0) {
+    return { total: 0, accepted: 0, duplicates: 0, jobs: [] };
+  }
+
+  const valueClauses: string[] = [];
+  const params: unknown[] = [];
+
+  inputs.forEach((input, i) => {
+    const offset = i * 5;
+    valueClauses.push(
+      `($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5})`
+    );
+    params.push(
+      input.eventId,
+      input.destinationUrl,
+      input.destinationHost,
+      JSON.stringify(input.payload),
+      input.maxAttempts ?? 4
+    );
+  });
+
+  const insertSql = `
+    INSERT INTO jobs (event_id, destination_url, destination_host, payload, max_attempts)
+    VALUES ${valueClauses.join(", ")}
+    ON CONFLICT (event_id) DO NOTHING
+    RETURNING id, event_id;
+  `;
+
+  const inserted = await pool.query<{ id: string; event_id: string }>(insertSql, params);
+  const insertedMap = new Map(inserted.rows.map((r) => [r.event_id, r.id]));
+
+  const missingEventIds = inputs
+    .map((input) => input.eventId)
+    .filter((eid) => !insertedMap.has(eid));
+
+  if (missingEventIds.length > 0) {
+    const existing = await pool.query<{ id: string; event_id: string }>(
+      `SELECT id, event_id FROM jobs WHERE event_id = ANY($1::text[])`,
+      [missingEventIds]
+    );
+    for (const row of existing.rows) {
+      insertedMap.set(row.event_id, row.id);
+    }
+  }
+
+  const jobs = inputs.map((input) => {
+    const isNew = inserted.rows.some((r) => r.event_id === input.eventId);
+    return {
+      eventId: input.eventId,
+      jobId: insertedMap.get(input.eventId) || "",
+      status: "queued",
+      duplicate: !isNew,
+    };
+  });
+
+  const accepted = inserted.rows.length;
+  const duplicates = inputs.length - accepted;
+
+  return {
+    total: inputs.length,
+    accepted,
+    duplicates,
+    jobs,
+  };
+}
+
+/**
+ * List dead-letter jobs (permanently failed) with pagination and search.
+ */
+export async function listDlqJobs(options: {
+  limit?: number;
+  offset?: number;
+  search?: string;
+}): Promise<{ jobs: JobRow[]; total: number }> {
+  const limit = Math.min(Math.max(options.limit ?? 20, 1), 100);
+  const offset = Math.max(options.offset ?? 0, 0);
+
+  if (options.search) {
+    const searchPattern = `%${options.search}%`;
+    const countRes = await pool.query<{ count: string }>(
+      `SELECT COUNT(*)::text as count FROM jobs WHERE status = 'failed' AND (event_id ILIKE $1 OR destination_host ILIKE $1)`,
+      [searchPattern]
+    );
+    const dataRes = await pool.query<JobRow>(
+      `SELECT * FROM jobs WHERE status = 'failed' AND (event_id ILIKE $1 OR destination_host ILIKE $1) ORDER BY updated_at DESC LIMIT $2 OFFSET $3`,
+      [searchPattern, limit, offset]
+    );
+    return { jobs: dataRes.rows, total: Number(countRes.rows[0]?.count || 0) };
+  }
+
+  const countRes = await pool.query<{ count: string }>(
+    `SELECT COUNT(*)::text as count FROM jobs WHERE status = 'failed'`
+  );
+  const dataRes = await pool.query<JobRow>(
+    `SELECT * FROM jobs WHERE status = 'failed' ORDER BY updated_at DESC LIMIT $1 OFFSET $2`,
+    [limit, offset]
+  );
+  return { jobs: dataRes.rows, total: Number(countRes.rows[0]?.count || 0) };
+}
+
+/**
+ * Redrives a single dead-letter job by resetting its status to queued and attempts to 0.
+ */
+export async function replayDlqJob(jobId: string): Promise<JobRow | null> {
+  const sql = `
+    UPDATE jobs
+    SET status = 'queued',
+        attempt_count = 0,
+        next_attempt_at = now(),
+        locked_until = NULL,
+        last_error = NULL,
+        updated_at = now()
+    WHERE id = $1 AND status = 'failed'
+    RETURNING *;
+  `;
+  const res = await pool.query<JobRow>(sql, [jobId]);
+  return res.rows[0] || null;
+}
+
+/**
+ * Redrives all dead-letter jobs in batch back to queued.
+ */
+export async function replayAllDlq(limit = 100): Promise<number> {
+  const sql = `
+    WITH to_replay AS (
+      SELECT id FROM jobs
+      WHERE status = 'failed'
+      ORDER BY updated_at ASC
+      LIMIT $1
+    )
+    UPDATE jobs j
+    SET status = 'queued',
+        attempt_count = 0,
+        next_attempt_at = now(),
+        locked_until = NULL,
+        last_error = NULL,
+        updated_at = now()
+    FROM to_replay
+    WHERE j.id = to_replay.id
+    RETURNING j.id;
+  `;
+  const res = await pool.query(sql, [limit]);
+  return res.rowCount || 0;
+}
+
+/**
+ * Returns count of jobs grouped by status for metrics and dashboard.
+ */
+export async function getQueueStats(): Promise<Record<string, number>> {
+  const res = await pool.query<{ status: string; count: string }>(
+    `SELECT status, COUNT(*)::text as count FROM jobs GROUP BY status;`
+  );
+  const stats: Record<string, number> = {
+    queued: 0,
+    processing: 0,
+    retrying: 0,
+    succeeded: 0,
+    failed: 0,
+  };
+  for (const row of res.rows) {
+    stats[row.status] = Number(row.count) || 0;
+  }
+  return stats;
+}
+
+

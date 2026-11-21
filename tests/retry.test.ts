@@ -4,6 +4,7 @@ import { pool, runMigrations } from "../src/db.js";
 import { WorkerManager } from "../src/worker/worker.js";
 import { getJobWithAttempts } from "../src/queue/jobs.repo.js";
 import { TokenBucketLimiter } from "../src/ratelimit/tokenBucket.js";
+import { globalCircuitBreaker } from "../src/lib/circuitBreaker.js";
 
 describe("Phase 3: Retry, Backoff, and Failure Classification", () => {
   let app: Awaited<ReturnType<typeof buildApp>>;
@@ -19,6 +20,7 @@ describe("Phase 3: Retry, Backoff, and Failure Classification", () => {
   });
 
   beforeEach(async () => {
+    globalCircuitBreaker.reset();
     await pool.query("TRUNCATE jobs CASCADE;");
   });
 
