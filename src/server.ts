@@ -20,6 +20,23 @@ export async function buildApp() {
     global: false,
   });
 
+  // Root route
+  app.get("/", async (_req, reply) => {
+    return reply.status(200).send({
+      name: "Distributed Webhook Dispatcher Engine",
+      status: "online",
+      endpoints: {
+        health: "GET /health",
+        dispatch: "POST /api/webhooks/dispatch",
+        jobs: "GET /api/webhooks/jobs",
+        jobDetail: "GET /api/webhooks/jobs/:jobId",
+        mockReceiver: "POST /mock/receiver",
+        mockStats: "GET /mock/receiver/stats",
+      },
+      documentation: "https://github.com/piverine/WebhookDispatcher",
+    });
+  });
+
   // Register routes
   await app.register(healthRoutes);
   await app.register(dispatchRoutes);
