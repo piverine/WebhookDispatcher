@@ -33,7 +33,21 @@ curl "$BASE/health"
 
 ---
 
-## 2. API Reference
+## 2. Web Dashboard & API Reference
+
+### 2.0 Interactive Web Dashboard (`GET /` or `GET /dashboard`)
+Open the service root or `/dashboard` in any web browser to access the built-in dark-mode dashboard:
+- **System Health Monitor:** Real-time health indicator polling `/health` and reporting Neon PostgreSQL status.
+- **1-Click Simulation Presets:** Instant dispatch testing for:
+  - `200 OK (Instant)`: Immediate successful delivery.
+  - `Flaky Downstream (500 -> 200)`: Simulates transient failure followed by successful backoff retry.
+  - `500 Fail (Retries -> Exhaustion)`: Triggers 4 exponential backoff attempts until marked permanently `failed`.
+  - `Slow Downstream (5s Delay)`: Verifies non-blocking ingestion while receiver handles long response times.
+  - `10x Burst (Rate Limit Test)`: Demonstrates per-host token bucket throttling and smooth queue draining.
+- **Custom Dispatch Console:** Send custom JSON payloads to any destination with automatic SSRF safety guards.
+- **Live Queue Inspector:** Auto-refreshes every 2 seconds, displaying job status badges (`queued`, `processing`, `retrying`, `succeeded`, `failed`), attempt counts, destinations, and timestamps.
+- **Delivery Attempt Audit Drawer:** Click any job row to inspect granular attempt records, HTTP response codes, latency in milliseconds, error reasons, and UTC timestamps.
+
 
 ### 2.1 `POST /api/webhooks/dispatch`
 Enqueues a webhook delivery job. **Does NOT make any outbound HTTP calls synchronously.**
