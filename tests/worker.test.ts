@@ -1,8 +1,9 @@
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
 import { buildApp } from "../src/server.js";
 import { pool, runMigrations } from "../src/db.js";
 import { WorkerManager } from "../src/worker/worker.js";
 import { getJobWithAttempts } from "../src/queue/jobs.repo.js";
+import { TokenBucketLimiter } from "../src/ratelimit/tokenBucket.js";
 
 describe("Phase 2: Worker and Delivery", () => {
   let app: Awaited<ReturnType<typeof buildApp>>;
@@ -14,7 +15,11 @@ describe("Phase 2: Worker and Delivery", () => {
     app = await buildApp();
     const address = await app.listen({ port: 0, host: "127.0.0.1" });
     serverUrl = address;
-    worker = new WorkerManager();
+    worker = new WorkerManager(undefined, new TokenBucketLimiter(100, 100));
+  });
+
+  beforeEach(async () => {
+    await pool.query("TRUNCATE jobs CASCADE;");
   });
 
   afterAll(async () => {
@@ -46,18 +51,9 @@ describe("Phase 2: Worker and Delivery", () => {
 
     // Run a worker tick to claim and deliver the job
     await worker.tick();
+    await worker.waitForIdle();
 
-    // Poll until delivery completes (max 5 seconds)
-    const maxWait = 5000;
-    const start = Date.now();
-    while (Date.now() - start < maxWait) {
-      result = await getJobWithAttempts(jobId);
-      if (result?.job.status === "succeeded") {
-        break;
-      }
-      await new Promise((r) => setTimeout(r, 100));
-    }
-
+    result = await getJobWithAttempts(jobId);
     expect(result?.job.status).toBe("succeeded");
     expect(result?.job.attempt_count).toBe(1);
     expect(result?.attempts.length).toBe(1);

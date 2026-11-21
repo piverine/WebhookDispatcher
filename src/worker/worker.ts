@@ -1,6 +1,6 @@
 import { config } from "../config.js";
 import { claimDueJobs, rescheduleRateLimited } from "../queue/jobs.repo.js";
-import { defaultLimiter } from "../ratelimit/tokenBucket.js";
+import { defaultLimiter, TokenBucketLimiter } from "../ratelimit/tokenBucket.js";
 import { deliverJob, DeliveryLogger } from "./deliver.js";
 
 export class WorkerManager {
@@ -9,9 +9,12 @@ export class WorkerManager {
   private inFlight = 0;
   private isStopping = false;
   private logger?: DeliveryLogger;
+  private limiter: TokenBucketLimiter;
+  private activeDeliveries = new Set<Promise<void>>();
 
-  constructor(logger?: DeliveryLogger) {
+  constructor(logger?: DeliveryLogger, limiter: TokenBucketLimiter = defaultLimiter) {
     this.logger = logger;
+    this.limiter = limiter;
   }
 
   public getInFlightCount(): number {
@@ -48,9 +51,9 @@ export class WorkerManager {
       for (const job of claimedJobs) {
         this.inFlight++;
         // Execute delivery asynchronously without awaiting all (parallel execution up to concurrency cap)
-        (async () => {
+        const deliveryPromise = (async () => {
           try {
-            await deliverJob(job, defaultLimiter, this.logger);
+            await deliverJob(job, this.limiter, this.logger);
           } catch (deliverErr) {
             // Hard rule 3: One failing job must never crash the worker loop.
             this.logger?.error(
@@ -67,9 +70,23 @@ export class WorkerManager {
             this.inFlight--;
           }
         })();
+
+        this.activeDeliveries.add(deliveryPromise);
+        deliveryPromise.finally(() => {
+          this.activeDeliveries.delete(deliveryPromise);
+        });
       }
     } finally {
       this.isTickRunning = false;
+    }
+  }
+
+  /**
+   * Waits for all currently active deliveries to settle.
+   */
+  public async waitForIdle(): Promise<void> {
+    while (this.activeDeliveries.size > 0) {
+      await Promise.allSettled(Array.from(this.activeDeliveries));
     }
   }
 
@@ -85,7 +102,8 @@ export class WorkerManager {
 
     const start = Date.now();
     while (this.inFlight > 0 && Date.now() - start < maxWaitMs) {
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await this.waitForIdle();
+      await new Promise((resolve) => setTimeout(resolve, 50));
     }
   }
 }

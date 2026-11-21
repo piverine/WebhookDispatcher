@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
 import { buildApp } from "../src/server.js";
 import { pool, runMigrations } from "../src/db.js";
 
@@ -8,6 +8,10 @@ describe("Phase 1: Database and Ingestion", () => {
   beforeAll(async () => {
     await runMigrations();
     app = await buildApp();
+  });
+
+  beforeEach(async () => {
+    await pool.query("TRUNCATE jobs CASCADE;");
   });
 
   afterAll(async () => {
