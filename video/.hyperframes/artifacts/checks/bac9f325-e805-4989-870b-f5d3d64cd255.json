@@ -1,0 +1,804 @@
+{
+  "ok": false,
+  "strict": false,
+  "browserSkipped": false,
+  "lint": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 5,
+    "infoCount": 0,
+    "findings": [
+      {
+        "code": "nested_structure_needs_subcomposition",
+        "severity": "warning",
+        "message": "<div id=\"top-ticker\"> is a timeline element that contains nested <div>. The timeline shows one row per top-level element, and the root composition is built only from sub-compositions.",
+        "selector": "#top-ticker",
+        "dataAttributes": {},
+        "sourceFile": "/home/rohan/Documents/CodingProjects/WebhookDispatcher/video/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move <div id=\"top-ticker\"> and its contents into a sub-composition file and mount it with data-composition-src."
+      },
+      {
+        "code": "timeline_track_too_dense",
+        "severity": "warning",
+        "message": "This HTML file has 4 timed elements. Smaller sub-compositions keep timelines easier to read, iterate on, and diff.",
+        "selector": "[data-composition-id]",
+        "dataAttributes": {},
+        "sourceFile": "/home/rohan/Documents/CodingProjects/WebhookDispatcher/video/compositions/scene1-ingest-db.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move coherent scene groups into smaller .html files and mount them from the parent with data-composition-src so the timeline stays easier to inspect, revise, and validate."
+      },
+      {
+        "code": "timeline_track_too_dense",
+        "severity": "warning",
+        "message": "This HTML file has 4 timed elements. Smaller sub-compositions keep timelines easier to read, iterate on, and diff.",
+        "selector": "[data-composition-id]",
+        "dataAttributes": {},
+        "sourceFile": "/home/rohan/Documents/CodingProjects/WebhookDispatcher/video/compositions/scene2-redis-circuit.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move coherent scene groups into smaller .html files and mount them from the parent with data-composition-src so the timeline stays easier to inspect, revise, and validate."
+      },
+      {
+        "code": "timeline_track_too_dense",
+        "severity": "warning",
+        "message": "This HTML file has 4 timed elements. Smaller sub-compositions keep timelines easier to read, iterate on, and diff.",
+        "selector": "[data-composition-id]",
+        "dataAttributes": {},
+        "sourceFile": "/home/rohan/Documents/CodingProjects/WebhookDispatcher/video/compositions/scene3-retries-dlq.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move coherent scene groups into smaller .html files and mount them from the parent with data-composition-src so the timeline stays easier to inspect, revise, and validate."
+      },
+      {
+        "code": "timeline_track_too_dense",
+        "severity": "warning",
+        "message": "This HTML file has 4 timed elements. Smaller sub-compositions keep timelines easier to read, iterate on, and diff.",
+        "selector": "[data-composition-id]",
+        "dataAttributes": {},
+        "sourceFile": "/home/rohan/Documents/CodingProjects/WebhookDispatcher/video/compositions/scene4-observability-stack.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move coherent scene groups into smaller .html files and mount them from the parent with data-composition-src so the timeline stays easier to inspect, revise, and validate."
+      }
+    ],
+    "filesScanned": 5
+  },
+  "runtime": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": []
+  },
+  "layout": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "duration": 30,
+    "samples": [
+      1.667,
+      5,
+      8.333,
+      11.667,
+      15,
+      18.333,
+      21.667,
+      25,
+      28.333
+    ],
+    "transitionSamples": [],
+    "transitionSamplesDropped": 0,
+    "tolerance": 2,
+    "totalIssueCount": 0,
+    "truncated": false,
+    "faceCheck": {
+      "ran": true,
+      "candidates": 0,
+      "faces": 0
+    }
+  },
+  "motion": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": false,
+    "samples": 0
+  },
+  "contrast": {
+    "ok": false,
+    "errorCount": 3,
+    "warningCount": 1,
+    "infoCount": 0,
+    "findings": [
+      {
+        "code": "contrast_aa_failure",
+        "severity": "error",
+        "message": "Contrast is 2.36:1; WCAG AA requires 4.5:1.",
+        "text": "|",
+        "fg": "rgb(71,85,105)",
+        "bg": "rgb(15,23,41)",
+        "ratio": 2.36,
+        "requiredRatio": 4.5,
+        "suggestedColor": "rgb(119,129,144)",
+        "large": false,
+        "selector": "div > div:nth-of-type(1) > span:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 680.140625,
+          "y": 42,
+          "width": 8.40625,
+          "height": 18
+        },
+        "time": 15,
+        "times": [
+          1.667,
+          8.333,
+          15,
+          21.667,
+          28.333
+        ]
+      },
+      {
+        "code": "contrast_aa_failure",
+        "severity": "error",
+        "message": "Contrast is 2.36:1; WCAG AA requires 4.5:1.",
+        "text": "|",
+        "fg": "rgb(71,85,105)",
+        "bg": "rgb(15,23,41)",
+        "ratio": 2.36,
+        "requiredRatio": 4.5,
+        "suggestedColor": "rgb(119,129,144)",
+        "large": false,
+        "selector": "div > div:nth-of-type(1) > span:nth-of-type(2)",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 944.875,
+          "y": 42,
+          "width": 8.40625,
+          "height": 18
+        },
+        "time": 1.667,
+        "times": [
+          1.667,
+          8.333,
+          15,
+          21.667,
+          28.333
+        ]
+      },
+      {
+        "code": "contrast_aa_failure",
+        "severity": "error",
+        "message": "Contrast is 2.36:1; WCAG AA requires 4.5:1.",
+        "text": "|",
+        "fg": "rgb(71,85,105)",
+        "bg": "rgb(15,23,41)",
+        "ratio": 2.36,
+        "requiredRatio": 4.5,
+        "suggestedColor": "rgb(119,129,144)",
+        "large": false,
+        "selector": "div > div:nth-of-type(1) > span:nth-of-type(3)",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 1216.15625,
+          "y": 42,
+          "width": 8.40625,
+          "height": 18
+        },
+        "time": 15,
+        "times": [
+          1.667,
+          8.333,
+          15,
+          21.667,
+          28.333
+        ]
+      },
+      {
+        "code": "contrast_aa_failure",
+        "severity": "warning",
+        "message": "Contrast is 4.24:1; WCAG AA requires 4.5:1.",
+        "text": "// Idempotency Key",
+        "fg": "rgb(100,116,139)",
+        "bg": "rgb(2,6,23)",
+        "ratio": 4.24,
+        "requiredRatio": 4.5,
+        "suggestedColor": "rgb(105,121,143)",
+        "large": false,
+        "selector": "div > div:nth-of-type(2) > div > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > span:nth-of-type(5)",
+        "dataAttributes": {},
+        "sourceFile": "compositions/scene1-ingest-db.html",
+        "bbox": {
+          "x": 426.859375,
+          "y": 609,
+          "width": 151.203125,
+          "height": 18
+        },
+        "time": 1.667,
+        "times": [
+          1.667
+        ]
+      }
+    ],
+    "enabled": true,
+    "samples": [
+      1.667,
+      8.333,
+      15,
+      21.667,
+      28.333
+    ],
+    "checked": 88,
+    "passed": 72
+  },
+  "craft": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 6,
+    "infoCount": 0,
+    "findings": [
+      {
+        "code": "first_frame_empty",
+        "severity": "warning",
+        "message": "Frame 0 shows only the background, and the first frame is the thumbnail on social players: have the title or key image already on screen at 0 s instead of entering from nothing; see references/review.md.",
+        "selector": "[data-composition-id]",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0
+      },
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and 4 text elements stay under it for 0.5 s or more, the smallest \"Fastify 5 + Node.js 20\" at 14 px: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "Fastify 5 + Node.js 20",
+        "selector": "#top-ticker > div:nth-of-type(1) > span:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 517.19,
+          "y": 33,
+          "width": 92.4,
+          "height": 36
+        },
+        "time": 0.25,
+        "times": [
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "fontPx": 14,
+        "floorPx": 28,
+        "seconds": 29.5,
+        "elements": [
+          {
+            "selector": "#top-ticker > div:nth-of-type(1) > span:nth-of-type(1)",
+            "text": "Fastify 5 + Node.js 20",
+            "fontPx": 14,
+            "time": 0.25,
+            "seconds": 29.5
+          },
+          {
+            "selector": "#top-ticker > div:nth-of-type(2) > span:nth-of-type(1)",
+            "text": "PostgreSQL FOR UPDATE SKIP LOCKED",
+            "fontPx": 14,
+            "time": 0.25,
+            "seconds": 29.5
+          },
+          {
+            "selector": "#top-ticker > div:nth-of-type(3) > span:nth-of-type(1)",
+            "text": "Redis 7 Cluster Token Bucket (Lua)",
+            "fontPx": 14,
+            "time": 0.25,
+            "seconds": 29.5
+          },
+          {
+            "selector": "#top-ticker > div:nth-of-type(4) > span:nth-of-type(1)",
+            "text": "Prometheus + Real-time SSE",
+            "fontPx": 14,
+            "time": 0.25,
+            "seconds": 29.5
+          }
+        ]
+      },
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and 45 text elements stay under it for 0.5 s or more, the smallest \"LOCKED (30s lease)\" at 11 px: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "LOCKED (30s lease)",
+        "selector": "div.workers-status > div:nth-of-type(1) > span:nth-of-type(3)",
+        "dataAttributes": {},
+        "sourceFile": "compositions/scene1-ingest-db.html",
+        "bbox": {
+          "x": 1645.14,
+          "y": 653,
+          "width": 118.81,
+          "height": 14
+        },
+        "time": 0.75,
+        "times": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ],
+        "fontPx": 11,
+        "floorPx": 28,
+        "seconds": 6.75,
+        "elements": [
+          {
+            "selector": "div.workers-status > div:nth-of-type(1) > span:nth-of-type(3)",
+            "text": "LOCKED (30s lease)",
+            "fontPx": 11,
+            "time": 0.75,
+            "seconds": 6.75
+          },
+          {
+            "selector": "div.workers-status > div:nth-of-type(2) > span:nth-of-type(3)",
+            "text": "LOCKED (30s lease)",
+            "fontPx": 11,
+            "time": 0.75,
+            "seconds": 6.75
+          },
+          {
+            "selector": "span.latency-tag",
+            "text": "12ms • Instant",
+            "fontPx": 12,
+            "time": 0.5,
+            "seconds": 7
+          },
+          {
+            "selector": "#panel-ingest > div:nth-of-type(1) > span:nth-of-type(1)",
+            "text": "Fastify REST Ingestion (< 15ms Latency)",
+            "fontPx": 13,
+            "time": 0.5,
+            "seconds": 7
+          },
+          {
+            "selector": "#panel-ingest > div:nth-of-type(1) > span:nth-of-type(2)",
+            "text": "202 Accepted",
+            "fontPx": 13,
+            "time": 0.5,
+            "seconds": 7
+          },
+          {
+            "selector": "span.method",
+            "text": "POST",
+            "fontPx": 13,
+            "time": 0.5,
+            "seconds": 7
+          },
+          {
+            "selector": "#batch-card",
+            "text": "⚡ enqueues up to 100 jobs in a single atomic SQL transaction.",
+            "fontPx": 13,
+            "time": 0.5,
+            "seconds": 7
+          },
+          {
+            "selector": "#batch-card > strong:nth-of-type(1)",
+            "text": "Batch Ingestion Ready:",
+            "fontPx": 13,
+            "time": 0.5,
+            "seconds": 7
+          },
+          {
+            "selector": "#batch-card > code:nth-of-type(1)",
+            "text": "POST /api/webhooks/dispatch/batch",
+            "fontPx": 13,
+            "time": 0.5,
+            "seconds": 7
+          },
+          {
+            "selector": "#panel-queue > div:nth-of-type(1) > span:nth-of-type(1)",
+            "text": "PostgreSQL Concurrency (Zero Race Conditions)",
+            "fontPx": 13,
+            "time": 0.75,
+            "seconds": 6.75
+          },
+          {
+            "selector": "#panel-queue > div:nth-of-type(1) > span:nth-of-type(2)",
+            "text": "Neon Pool Active",
+            "fontPx": 13,
+            "time": 0.75,
+            "seconds": 6.75
+          },
+          {
+            "selector": "div.workers-status > div:nth-of-type(1) > span:nth-of-type(1)",
+            "text": "Worker #1",
+            "fontPx": 13,
+            "time": 0.75,
+            "seconds": 6.75
+          },
+          {
+            "selector": "div.workers-status > div:nth-of-type(1) > span:nth-of-type(2)",
+            "text": "Claimed Job",
+            "fontPx": 13,
+            "time": 0.75,
+            "seconds": 6.75
+          },
+          {
+            "selector": "div.workers-status > div:nth-of-type(1) > span:nth-of-type(2) > code:nth-of-type(1)",
+            "text": "#evt_94a1",
+            "fontPx": 13,
+            "time": 0.75,
+            "seconds": 6.75
+          },
+          {
+            "selector": "div.workers-status > div:nth-of-type(2) > span:nth-of-type(1)",
+            "text": "Worker #2",
+            "fontPx": 13,
+            "time": 0.75,
+            "seconds": 6.75
+          },
+          {
+            "selector": "div.workers-status > div:nth-of-type(2) > span:nth-of-type(2)",
+            "text": "Claimed Job",
+            "fontPx": 13,
+            "time": 0.75,
+            "seconds": 6.75
+          },
+          {
+            "selector": "div.workers-status > div:nth-of-type(2) > span:nth-of-type(2) > code:nth-of-type(1)",
+            "text": "#evt_81c2",
+            "fontPx": 13,
+            "time": 0.75,
+            "seconds": 6.75
+          },
+          {
+            "selector": "div.workers-status > div:nth-of-type(3) > span:nth-of-type(1)",
+            "text": "Crash Recovery",
+            "fontPx": 13,
+            "time": 0.75,
+            "seconds": 6.75
+          },
+          {
+            "selector": "div.workers-status > div:nth-of-type(3) > span:nth-of-type(2)",
+            "text": "Auto-clears stale locks after crash",
+            "fontPx": 13,
+            "time": 0.75,
+            "seconds": 6.75
+          },
+          {
+            "selector": "div.workers-status > div:nth-of-type(3) > span:nth-of-type(3)",
+            "text": "OK",
+            "fontPx": 13,
+            "time": 0.75,
+            "seconds": 6.75
+          },
+          {
+            "selector": "div.code-block > span:nth-of-type(1)",
+            "text": "\"destinationUrl\"",
+            "fontPx": 14,
+            "time": 0.5,
+            "seconds": 7
+          },
+          {
+            "selector": "div.code-block > span:nth-of-type(2)",
+            "text": "\"https://api.partner.io/events\"",
+            "fontPx": 14,
+            "time": 0.5,
+            "seconds": 7
+          },
+          {
+            "selector": "div.code-block > span:nth-of-type(3)",
+            "text": "\"eventId\"",
+            "fontPx": 14,
+            "time": 0.5,
+            "seconds": 7
+          },
+          {
+            "selector": "div.code-block > span:nth-of-type(4)",
+            "text": "\"evt_live_849204\"",
+            "fontPx": 14,
+            "time": 0.5,
+            "seconds": 7
+          },
+          {
+            "selector": "div.code-block > span:nth-of-type(5)",
+            "text": "// Idempotency Key",
+            "fontPx": 14,
+            "time": 0.5,
+            "seconds": 7
+          },
+          {
+            "selector": "div.code-block > span:nth-of-type(6)",
+            "text": "\"payload\"",
+            "fontPx": 14,
+            "time": 0.5,
+            "seconds": 7
+          },
+          {
+            "selector": "div.code-block > span:nth-of-type(7)",
+            "text": "\"orderId\"",
+            "fontPx": 14,
+            "time": 0.5,
+            "seconds": 7
+          },
+          {
+            "selector": "div.code-block > span:nth-of-type(8)",
+            "text": "9821",
+            "fontPx": 14,
+            "time": 0.5,
+            "seconds": 7
+          },
+          {
+            "selector": "div.code-block > span:nth-of-type(9)",
+            "text": "\"amount\"",
+            "fontPx": 14,
+            "time": 0.5,
+            "seconds": 7
+          },
+          {
+            "selector": "div.code-block > span:nth-of-type(10)",
+            "text": "4900",
+            "fontPx": 14,
+            "time": 0.5,
+            "seconds": 7
+          },
+          {
+            "selector": "div.sql-code",
+            "text": "* webhook_jobs status (, ) next_attempt_at <= () created_at 5;",
+            "fontPx": 14,
+            "time": 0.75,
+            "seconds": 6.75
+          },
+          {
+            "selector": "div.sql-code > span:nth-of-type(1)",
+            "text": "SELECT",
+            "fontPx": 14,
+            "time": 0.75,
+            "seconds": 6.75
+          },
+          {
+            "selector": "div.sql-code > span:nth-of-type(2)",
+            "text": "FROM",
+            "fontPx": 14,
+            "time": 0.75,
+            "seconds": 6.75
+          },
+          {
+            "selector": "div.sql-code > span:nth-of-type(3)",
+            "text": "WHERE",
+            "fontPx": 14,
+            "time": 0.75,
+            "seconds": 6.75
+          },
+          {
+            "selector": "div.sql-code > span:nth-of-type(4)",
+            "text": "IN",
+            "fontPx": 14,
+            "time": 0.75,
+            "seconds": 6.75
+          },
+          {
+            "selector": "div.sql-code > span:nth-of-type(5)",
+            "text": "'queued'",
+            "fontPx": 14,
+            "time": 0.75,
+            "seconds": 6.75
+          },
+          {
+            "selector": "div.sql-code > span:nth-of-type(6)",
+            "text": "'retrying'",
+            "fontPx": 14,
+            "time": 0.75,
+            "seconds": 6.75
+          },
+          {
+            "selector": "div.sql-code > span:nth-of-type(7)",
+            "text": "AND",
+            "fontPx": 14,
+            "time": 0.75,
+            "seconds": 6.75
+          },
+          {
+            "selector": "span.sql-fn",
+            "text": "NOW",
+            "fontPx": 14,
+            "time": 0.75,
+            "seconds": 6.75
+          },
+          {
+            "selector": "div.sql-code > span:nth-of-type(9)",
+            "text": "ORDER BY",
+            "fontPx": 14,
+            "time": 0.75,
+            "seconds": 6.75
+          },
+          {
+            "selector": "div.sql-code > span:nth-of-type(10)",
+            "text": "ASC",
+            "fontPx": 14,
+            "time": 0.75,
+            "seconds": 6.75
+          },
+          {
+            "selector": "div.sql-code > span:nth-of-type(11)",
+            "text": "FOR UPDATE SKIP LOCKED",
+            "fontPx": 14,
+            "time": 0.75,
+            "seconds": 6.75
+          },
+          {
+            "selector": "div.sql-code > span:nth-of-type(12)",
+            "text": "LIMIT",
+            "fontPx": 14,
+            "time": 0.75,
+            "seconds": 6.75
+          },
+          {
+            "selector": "span.url-text",
+            "text": "/api/webhooks/dispatch",
+            "fontPx": 16,
+            "time": 0.5,
+            "seconds": 7
+          },
+          {
+            "selector": "#b1-subtitle",
+            "text": "Fastify 5 Non-blocking Ingestion + PostgreSQL 16 FOR UPDATE SKIP LOCKED",
+            "fontPx": 20,
+            "time": 0.5,
+            "seconds": 7
+          }
+        ]
+      },
+      {
+        "code": "dead_stretch",
+        "severity": "warning",
+        "message": "Nothing on screen changes for 7.25 s (7.63–14.88 s): start the next move within 3 s, or put data-hold on the element whose stillness is deliberate; see references/motion.md.",
+        "selector": "[data-composition-id]",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 7.625,
+        "seconds": 7.25,
+        "floorSeconds": 3,
+        "until": 14.875
+      },
+      {
+        "code": "dead_stretch",
+        "severity": "warning",
+        "message": "Nothing on screen changes for 7.25 s (15.13–22.38 s): start the next move within 3 s, or put data-hold on the element whose stillness is deliberate; see references/motion.md.",
+        "selector": "[data-composition-id]",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 15.125,
+        "seconds": 7.25,
+        "floorSeconds": 3,
+        "until": 22.375
+      },
+      {
+        "code": "dead_stretch",
+        "severity": "warning",
+        "message": "Nothing on screen changes for 4.38 s (22.63–27.00 s): start the next move within 3 s, or put data-hold on the element whose stillness is deliberate; see references/motion.md.",
+        "selector": "[data-composition-id]",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 22.625,
+        "seconds": 4.375,
+        "floorSeconds": 3,
+        "until": 27
+      }
+    ],
+    "enabled": true,
+    "step": 0.125,
+    "samples": 240
+  },
+  "audio": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": []
+  },
+  "hdr": {
+    "autoPromotion": null,
+    "inspection": "available"
+  },
+  "snapshots": {
+    "enabled": false,
+    "files": [],
+    "times": [],
+    "findingFiles": []
+  }
+}

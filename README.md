@@ -4,16 +4,21 @@ A resilient, scalable, asynchronous webhook delivery engine built with **Node.js
 
 ---
 
-## 🎯 Live Deployment & Deliverables (Judge's Quick Links)
+## 🎯 Live Deployment & Deliverables
 
-| Deliverable | URL / Value |
+| Deliverable | URL / Link |
 |---|---|
-| **Live Public API URL** | `https://webhookdispatcher.onrender.com/`  |
-| **Interactive Web Dashboard** | `https://webhookdispatcher.onrender.com/dashboard`  |
+| **Video Walkthrough & Architecture Demo** | [https://youtu.be/cCukHeNGXU4](https://youtu.be/cCukHeNGXU4) |
+| **Live Public API URL** | [https://webhookdispatcher.onrender.com/](https://webhookdispatcher.onrender.com/) |
+| **Interactive Web Dashboard** | [https://webhookdispatcher.onrender.com/dashboard](https://webhookdispatcher.onrender.com/dashboard) |
 | **GitHub Repository** | [https://github.com/piverine/WebhookDispatcher](https://github.com/piverine/WebhookDispatcher) |
-| **Health Check Endpoint** | `https://webhookdispatcher.onrender.com/health` |
-| **Prometheus Metrics** | `https://webhookdispatcher.onrender.com/metrics` |
-| **Live Real-Time SSE Stream** | `https://webhookdispatcher.onrender.com/api/webhooks/stream` |
+| **Health Check Endpoint** | [https://webhookdispatcher.onrender.com/health](https://webhookdispatcher.onrender.com/health) |
+| **Prometheus Metrics** | [https://webhookdispatcher.onrender.com/metrics](https://webhookdispatcher.onrender.com/metrics) |
+| **Live Real-Time SSE Stream** | [https://webhookdispatcher.onrender.com/api/webhooks/stream](https://webhookdispatcher.onrender.com/api/webhooks/stream) |
+
+### 📹 Video Walkthrough & Architecture Demo
+Watch the comprehensive video walkthrough demonstrating the architecture, live test suite, failure retries, and operations console:  
+👉 **[Watch on YouTube: Webhook Dispatcher Engine Walkthrough](https://youtu.be/cCukHeNGXU4)**
 
 > **Note on Free-Tier Hosting (Render Cold Starts):** Free-tier instances spin down after inactivity. The first request after an idle period may take 30–50 seconds while the container initializes. Subsequent requests respond in < 15ms. Because all state is durably persisted in PostgreSQL, no jobs or events are ever lost during sleep or restarts.
 
@@ -245,7 +250,7 @@ curl -N "$BASE_URL/api/webhooks/stream"
 
 ## 🖥️ Interactive Web Dashboard
 
-Open `GET /` or `GET /dashboard` in any browser to access the visual management console:
+Open [`https://webhookdispatcher.onrender.com/dashboard`](https://webhookdispatcher.onrender.com/dashboard) (or [`http://localhost:3000/dashboard`](http://localhost:3000/dashboard) locally) in any browser to access the visual management console:
 
 - **System Health Monitor:** Real-time polling indicator verifying Neon PostgreSQL connectivity.
 - **1-Click Simulation Buttons:** Instant testing for 200 OK, Flaky Downstream, 500 Fail retries, 10s Slow Target, 10x Rate-limit burst, and 5x Batch ingestion.
@@ -259,7 +264,8 @@ Open `GET /` or `GET /dashboard` in any browser to access the visual management 
 
 ## 📚 Table of Contents
 
-- [Live Deployment & Deliverables](#-live-deployment--deliverables-judges-quick-links)
+- [Live Deployment & Deliverables](#-live-deployment--deliverables)
+- [Video Walkthrough & Architecture Demo](#-video-walkthrough--architecture-demo)
 - [Quick Start: 60-Second Evaluation Run](#-quick-start-60-second-evaluation-run)
 - [Evaluator cURL Test Suite](#-evaluator-curl-test-suite-all-scenarios)
 - [Interactive Web Dashboard](#️-interactive-web-dashboard)
