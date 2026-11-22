@@ -8,12 +8,12 @@ A resilient, scalable, asynchronous webhook delivery engine built with **Node.js
 
 | Deliverable | URL / Value |
 |---|---|
-| **Live Public API URL** | `https://webhookdispatcher-w948.onrender.com` *(or replace with your deployed Render service URL)* |
-| **Interactive Web Dashboard** | `https://webhookdispatcher-w948.onrender.com/dashboard` *(or root `/` in any web browser)* |
+| **Live Public API URL** | `https://webhookdispatcher.onrender.com/`  |
+| **Interactive Web Dashboard** | `https://webhookdispatcher.onrender.com/dashboard`  |
 | **GitHub Repository** | [https://github.com/piverine/WebhookDispatcher](https://github.com/piverine/WebhookDispatcher) |
-| **Health Check Endpoint** | `https://webhookdispatcher-w948.onrender.com/health` |
-| **Prometheus Metrics** | `https://webhookdispatcher-w948.onrender.com/metrics` |
-| **Live Real-Time SSE Stream** | `https://webhookdispatcher-w948.onrender.com/api/webhooks/stream` |
+| **Health Check Endpoint** | `https://webhookdispatcher.onrender.com/health` |
+| **Prometheus Metrics** | `https://webhookdispatcher.onrender.com/metrics` |
+| **Live Real-Time SSE Stream** | `https://webhookdispatcher.onrender.com/api/webhooks/stream` |
 
 > **Note on Free-Tier Hosting (Render Cold Starts):** Free-tier instances spin down after inactivity. The first request after an idle period may take 30–50 seconds while the container initializes. Subsequent requests respond in < 15ms. Because all state is durably persisted in PostgreSQL, no jobs or events are ever lost during sleep or restarts.
 
@@ -28,7 +28,7 @@ Set your base URL in your terminal (local or deployed Render URL):
 export BASE_URL="http://localhost:3000"
 
 # Or for live cloud evaluation:
-# export BASE_URL="https://webhookdispatcher-w948.onrender.com"
+# export BASE_URL="https://webhookdispatcher.onrender.com/"
 ```
 
 ### 1. Verify Service & Database Health
@@ -664,3 +664,4 @@ npm test
 ├── vitest.config.ts                 # Vitest test configuration
 └── README.md
 ```
+

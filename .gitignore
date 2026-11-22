@@ -3,3 +3,15 @@ dist/
 .env
 *.log
 
+# Impeccable skill & AI agent configs
+.agent/
+.agents/
+.claude/
+.codex/
+.cursor/
+.gemini/
+.hermes/
+.opencode/
+.pi/
+
+

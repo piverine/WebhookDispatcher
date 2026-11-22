@@ -4,491 +4,867 @@ export function getDashboardHtml(): string {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Webhook Dispatcher Engine | Live Dashboard</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <title>Webhook Dispatcher Engine | Operations Console</title>
   <style>
     :root {
-      --bg: #090d16;
-      --card-bg: #111726;
-      --card-border: #1f293d;
-      --text-main: #f1f5f9;
-      --text-muted: #94a3b8;
-      --primary: #6366f1;
-      --primary-hover: #4f46e5;
+      --bg: #0c0f14;
+      --surface: #12171f;
+      --surface-elevated: #181f2a;
+      --surface-hover: #1c2433;
+      --border: #212a39;
+      --border-muted: #18202c;
+      --border-focus: #3b82f6;
+
+      --text-main: #f1f4f8;
+      --text-muted: #8b96a5;
+      --text-dim: #5c6878;
+
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --primary-subtle: rgba(59, 130, 246, 0.12);
+
       --success: #10b981;
+      --success-subtle: rgba(16, 185, 129, 0.12);
+      --success-border: rgba(16, 185, 129, 0.25);
+
       --warning: #f59e0b;
+      --warning-subtle: rgba(245, 158, 11, 0.12);
+      --warning-border: rgba(245, 158, 11, 0.25);
+
       --danger: #ef4444;
-      --info: #38bdf8;
+      --danger-subtle: rgba(239, 68, 68, 0.12);
+      --danger-border: rgba(239, 68, 68, 0.25);
+
+      --info: #0284c7;
+      --info-subtle: rgba(2, 132, 199, 0.12);
+      --info-border: rgba(2, 132, 199, 0.25);
+
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      --font-mono: ui-monospace, "SF Mono", "Cascadia Code", "Roboto Mono", Menlo, Consolas, monospace;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    ::selection {
+      background: rgba(59, 130, 246, 0.3);
+      color: #fff;
+    }
+
     body {
       background: var(--bg);
       color: var(--text-main);
-      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      line-height: 1.5;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
+      -webkit-font-smoothing: antialiased;
     }
 
-    /* Header */
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #323f54; }
+
+    /* Top Navigation Bar */
     header {
-      background: rgba(17, 23, 38, 0.8);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--card-border);
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
       position: sticky;
       top: 0;
-      z-index: 50;
-      padding: 1rem 1.5rem;
+      z-index: 40;
     }
+
     .header-inner {
-      max-width: 1400px;
+      max-width: 1520px;
       margin: 0 auto;
+      padding: 0.65rem 1.25rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 1rem;
+      gap: 1.25rem;
     }
-    .logo-group {
+
+    .brand-group {
       display: flex;
       align-items: center;
       gap: 0.75rem;
     }
-    .logo-badge {
-      background: linear-gradient(135deg, #6366f1, #a855f7);
-      width: 36px;
-      height: 36px;
-      border-radius: 8px;
+
+    .brand-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-weight: 700;
-      font-size: 1.1rem;
-      color: #fff;
-    }
-    h1 {
-      font-size: 1.15rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-    }
-    .subtitle {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-    }
-    .status-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.35rem 0.75rem;
-      border-radius: 9999px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      background: rgba(16, 185, 129, 0.1);
-      border: 1px solid rgba(16, 185, 129, 0.25);
-      color: var(--success);
-    }
-    .pulse-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--success);
-      box-shadow: 0 0 10px var(--success);
-      animation: pulse 2s infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.4; transform: scale(0.9); }
+      color: var(--primary);
     }
 
-    /* Main Container */
-    main {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 1.5rem;
-      width: 100%;
-      flex: 1;
-      display: grid;
-      grid-template-columns: 420px 1fr;
-      gap: 1.5rem;
-    }
-
-    @media (max-width: 1024px) {
-      main { grid-template-columns: 1fr; }
-    }
-
-    .card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 12px;
-      padding: 1.25rem;
+    .brand-titles {
       display: flex;
       flex-direction: column;
     }
-    .card-header {
+
+    h1 {
+      font-size: 0.88rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .version-tag {
+      font-size: 10px;
+      font-family: var(--font-mono);
+      padding: 1px 5px;
+      border-radius: 3px;
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .system-stack {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    .header-telemetry {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.25rem 0.6rem;
+      border-radius: 4px;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      font-weight: 500;
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--text-dim);
+    }
+    .status-dot.active { background: var(--success); }
+    .status-dot.warn { background: var(--warning); }
+    .status-dot.err { background: var(--danger); }
+
+    .nav-link {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      transition: color 0.12s ease, background 0.12s ease;
+    }
+    .nav-link:hover {
+      color: var(--text-main);
+      background: var(--surface-elevated);
+    }
+
+    /* Layout */
+    main {
+      max-width: 1520px;
+      margin: 0 auto;
+      padding: 1.25rem;
+      width: 100%;
+      flex: 1;
+      display: grid;
+      grid-template-columns: 440px 1fr;
+      gap: 1.25rem;
+    }
+
+    @media (max-width: 1120px) {
+      main { grid-template-columns: 1fr; }
+    }
+
+    .panel-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 0.75rem 1rem;
+      background: var(--surface-elevated);
+      border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 1rem;
-      padding-bottom: 0.75rem;
-      border-bottom: 1px solid var(--card-border);
+      gap: 0.75rem;
     }
-    .card-title {
-      font-size: 0.95rem;
-      font-weight: 700;
+
+    .panel-title {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-main);
       display: flex;
       align-items: center;
       gap: 0.5rem;
+      letter-spacing: -0.01em;
     }
 
-    /* Forms & Presets */
-    .presets {
+    .panel-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    .panel-body {
+      padding: 1rem;
+    }
+
+    /* Preset Matrix */
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .preset-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 0.5rem;
+      gap: 0.4rem;
       margin-bottom: 1rem;
     }
+
     .btn-preset {
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid var(--card-border);
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
       color: var(--text-main);
-      padding: 0.5rem;
-      border-radius: 6px;
-      font-size: 0.75rem;
-      font-weight: 600;
+      padding: 0.5rem 0.65rem;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
       cursor: pointer;
-      transition: all 0.15s ease;
       text-align: left;
+      transition: border-color 0.12s, background 0.12s;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
     }
     .btn-preset:hover {
-      background: rgba(99, 102, 241, 0.15);
-      border-color: var(--primary);
+      background: var(--surface-hover);
+      border-color: #2f3c52;
     }
-    .btn-preset span {
-      display: block;
-      font-size: 0.65rem;
+    .btn-preset:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 1px;
+    }
+    .btn-preset .preset-name {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+    .btn-preset .preset-desc {
+      font-size: 10.5px;
       color: var(--text-muted);
       font-weight: 400;
-      margin-top: 2px;
     }
 
+    /* Forms */
     .form-group {
       margin-bottom: 0.85rem;
     }
+
     label {
       display: block;
-      font-size: 0.75rem;
-      font-weight: 600;
+      font-size: 11px;
+      font-weight: 500;
       color: var(--text-muted);
-      margin-bottom: 0.35rem;
+      margin-bottom: 0.3rem;
+      letter-spacing: 0.02em;
     }
+
     input, textarea, select {
       width: 100%;
-      background: rgba(0, 0, 0, 0.3);
-      border: 1px solid var(--card-border);
-      border-radius: 6px;
-      padding: 0.55rem 0.75rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.45rem 0.65rem;
       color: var(--text-main);
-      font-size: 0.82rem;
-      font-family: inherit;
+      font-size: 12.5px;
+      font-family: var(--font-sans);
       outline: none;
-      transition: border 0.15s;
+      transition: border-color 0.12s ease;
     }
+
     input:focus, textarea:focus, select:focus {
       border-color: var(--primary);
       box-shadow: 0 0 0 1px var(--primary);
     }
+
     textarea {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.75rem;
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      line-height: 1.45;
       resize: vertical;
-      min-height: 90px;
+      min-height: 96px;
     }
 
     .btn-submit {
       background: var(--primary);
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      padding: 0.65rem;
-      font-size: 0.85rem;
+      color: #ffffff;
+      border: 1px solid #2563eb;
+      border-radius: 4px;
+      padding: 0.55rem 0.85rem;
+      font-size: 12.5px;
       font-weight: 600;
       cursor: pointer;
       width: 100%;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 0.5rem;
-      transition: background 0.15s;
+      gap: 0.4rem;
+      transition: background 0.12s, border-color 0.12s;
     }
-    .btn-submit:hover { background: var(--primary-hover); }
+    .btn-submit:hover {
+      background: var(--primary-hover);
+      border-color: #1d4ed8;
+    }
+    .btn-submit:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .btn-submit:focus-visible {
+      outline: 2px solid #93c5fd;
+      outline-offset: 1px;
+    }
 
     .dispatch-result {
       margin-top: 0.75rem;
-      padding: 0.65rem;
-      border-radius: 6px;
-      font-size: 0.75rem;
-      font-family: 'JetBrains Mono', monospace;
+      padding: 0.6rem 0.75rem;
+      border-radius: 4px;
+      font-size: 11.5px;
+      font-family: var(--font-mono);
+      white-space: pre-wrap;
+      word-break: break-all;
       display: none;
     }
     .dispatch-result.success {
-      background: rgba(16, 185, 129, 0.1);
-      border: 1px solid rgba(16, 185, 129, 0.3);
+      background: var(--success-subtle);
+      border: 1px solid var(--success-border);
       color: #34d399;
       display: block;
     }
     .dispatch-result.error {
-      background: rgba(239, 68, 68, 0.1);
-      border: 1px solid rgba(239, 68, 68, 0.3);
+      background: var(--danger-subtle);
+      border: 1px solid var(--danger-border);
       color: #f87171;
       display: block;
     }
 
-    /* Stats Grid */
-    .stats-row {
+    /* Metric telemetry bar */
+    .metric-strip {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 0.75rem;
-      margin-bottom: 1.25rem;
-    }
-    .stat-pill {
-      background: rgba(0, 0, 0, 0.25);
-      border: 1px solid var(--card-border);
-      border-radius: 8px;
-      padding: 0.75rem;
-      text-align: center;
-    }
-    .stat-val {
-      font-size: 1.4rem;
-      font-weight: 700;
-      color: var(--text-main);
-      font-family: 'JetBrains Mono', monospace;
-    }
-    .stat-label {
-      font-size: 0.7rem;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-top: 2px;
+      gap: 1px;
+      background: var(--border);
+      border-bottom: 1px solid var(--border);
     }
 
-    /* Table */
+    .metric-cell {
+      background: var(--surface);
+      padding: 0.75rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .metric-val {
+      font-size: 1.35rem;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .metric-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    /* Data Tables */
     .table-container {
       overflow-x: auto;
-      border: 1px solid var(--card-border);
-      border-radius: 8px;
       flex: 1;
     }
+
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 0.8rem;
+      font-size: 12px;
       text-align: left;
     }
+
     th {
-      background: rgba(0, 0, 0, 0.3);
-      padding: 0.75rem 1rem;
+      background: var(--surface-elevated);
+      padding: 0.55rem 0.85rem;
       color: var(--text-muted);
       font-weight: 600;
-      font-size: 0.7rem;
+      font-size: 10.5px;
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      border-bottom: 1px solid var(--card-border);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
     }
+
     td {
-      padding: 0.75rem 1rem;
-      border-bottom: 1px solid rgba(31, 41, 61, 0.5);
+      padding: 0.55rem 0.85rem;
+      border-bottom: 1px solid var(--border-muted);
       vertical-align: middle;
+      white-space: nowrap;
     }
+
     tr:hover td {
-      background: rgba(255, 255, 255, 0.02);
+      background: var(--surface-hover);
       cursor: pointer;
     }
-    .mono {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.75rem;
-    }
-    .badge {
-      display: inline-block;
-      padding: 0.2rem 0.5rem;
-      border-radius: 4px;
-      font-size: 0.7rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.03em;
-    }
-    .badge-succeeded { background: rgba(16, 185, 129, 0.15); color: #34d399; }
-    .badge-failed { background: rgba(239, 68, 68, 0.15); color: #f87171; }
-    .badge-retrying { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
-    .badge-queued { background: rgba(99, 102, 241, 0.15); color: #818cf8; }
-    .badge-processing { background: rgba(56, 189, 248, 0.15); color: #38bdf8; }
 
-    /* Modal / Drawer */
+    .mono {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Status Badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.15rem 0.45rem;
+      border-radius: 3px;
+      font-size: 10.5px;
+      font-weight: 600;
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+
+    .badge::before {
+      content: "";
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+    }
+
+    .badge-succeeded {
+      background: var(--success-subtle);
+      border: 1px solid var(--success-border);
+      color: #34d399;
+    }
+    .badge-succeeded::before { background: #34d399; }
+
+    .badge-failed {
+      background: var(--danger-subtle);
+      border: 1px solid var(--danger-border);
+      color: #f87171;
+    }
+    .badge-failed::before { background: #f87171; }
+
+    .badge-retrying {
+      background: var(--warning-subtle);
+      border: 1px solid var(--warning-border);
+      color: #fbbf24;
+    }
+    .badge-retrying::before { background: #fbbf24; }
+
+    .badge-queued {
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      color: #94a3b8;
+    }
+    .badge-queued::before { background: #94a3b8; }
+
+    .badge-processing {
+      background: var(--info-subtle);
+      border: 1px solid var(--info-border);
+      color: #38bdf8;
+    }
+    .badge-processing::before { background: #38bdf8; }
+
+    /* Action Buttons */
+    .btn-action {
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 0.25rem 0.55rem;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      transition: background 0.12s, border-color 0.12s;
+    }
+    .btn-action:hover {
+      background: var(--surface-hover);
+      border-color: #334155;
+    }
+    .btn-action.btn-danger {
+      color: #f87171;
+      border-color: var(--danger-border);
+    }
+    .btn-action.btn-danger:hover {
+      background: var(--danger-subtle);
+    }
+    .btn-action.btn-success {
+      color: #34d399;
+      border-color: var(--success-border);
+    }
+    .btn-action.btn-success:hover {
+      background: var(--success-subtle);
+    }
+
+    /* Modal / Inspector */
     .modal-backdrop {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.7);
-      backdrop-filter: blur(4px);
+      background: rgba(8, 10, 14, 0.75);
+      backdrop-filter: blur(2px);
       display: none;
       align-items: center;
       justify-content: center;
       z-index: 100;
-      padding: 1.5rem;
+      padding: 1rem;
     }
+
     .modal {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 12px;
-      max-width: 650px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      max-width: 640px;
       width: 100%;
       max-height: 85vh;
       display: flex;
       flex-direction: column;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
+      overflow: hidden;
     }
+
     .modal-header {
-      padding: 1rem 1.25rem;
-      border-bottom: 1px solid var(--card-border);
+      padding: 0.75rem 1rem;
+      background: var(--surface-elevated);
+      border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: space-between;
     }
-    .modal-body {
-      padding: 1.25rem;
-      overflow-y: auto;
-      flex: 1;
+
+    .modal-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
     }
+
     .close-btn {
       background: none;
       border: none;
       color: var(--text-muted);
-      font-size: 1.25rem;
+      font-size: 1rem;
       cursor: pointer;
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
     }
+    .close-btn:hover {
+      color: var(--text-main);
+      background: var(--surface-hover);
+    }
+
+    .modal-body {
+      padding: 1rem;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .audit-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .audit-item {
+      background: var(--bg);
+      border: 1px solid var(--border-muted);
+      border-radius: 4px;
+      padding: 0.6rem 0.75rem;
+    }
+
+    .audit-label {
+      font-size: 10.5px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 2px;
+    }
+
     .timeline-item {
-      padding: 0.75rem;
-      border-left: 2px solid var(--card-border);
-      margin-left: 0.5rem;
-      position: relative;
+      padding: 0.65rem 0.85rem;
+      background: var(--bg);
+      border: 1px solid var(--border-muted);
+      border-radius: 4px;
+      margin-bottom: 0.5rem;
     }
-    .timeline-item::before {
-      content: '';
-      position: absolute;
-      left: -6px;
-      top: 1rem;
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: var(--primary);
+
+    .svg-icon {
+      width: 14px;
+      height: 14px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      display: inline-block;
+      vertical-align: middle;
     }
   </style>
 </head>
 <body>
 
+  <!-- Top Navigation Header -->
   <header>
     <div class="header-inner">
-      <div class="logo-group">
-        <div class="logo-badge">⚡</div>
-        <div>
-          <h1>Webhook Dispatcher Engine</h1>
-          <div class="subtitle">Distributed Queue &bull; PostgreSQL &bull; Exponential Backoff &bull; Token Bucket</div>
+      <div class="brand-group">
+        <div class="brand-icon">
+          <svg class="svg-icon" viewBox="0 0 24 24">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+          </svg>
+        </div>
+        <div class="brand-titles">
+          <h1>
+            Webhook Dispatcher Engine
+            <span class="version-tag">v1.0</span>
+          </h1>
+          <div class="system-stack">PostgreSQL &bull; Exponential Backoff &bull; Token Bucket</div>
         </div>
       </div>
-      <div style="display: flex; align-items: center; gap: 1rem;">
-        <div class="status-badge" id="healthBadge">
-          <div class="pulse-dot"></div>
+
+      <div class="header-telemetry">
+        <div class="status-pill" id="healthBadge">
+          <span class="status-dot active"></span>
           <span id="healthText">Checking DB...</span>
         </div>
-        <div class="status-badge" id="sseBadge" style="background: rgba(99, 102, 241, 0.1); border-color: rgba(99, 102, 241, 0.3); color: #a5b4fc;">
-          <div class="pulse-dot" style="background: #a5b4fc; box-shadow: 0 0 10px #a5b4fc;"></div>
+        <div class="status-pill" id="sseBadge">
+          <span class="status-dot active"></span>
           <span id="sseText">SSE Connecting...</span>
         </div>
-        <a href="/metrics" target="_blank" style="color: #38bdf8; text-decoration: none; font-size: 0.8rem; font-weight: 600;">
-          Prometheus &rarr;
+        <a href="/metrics" target="_blank" class="nav-link">
+          <svg class="svg-icon" viewBox="0 0 24 24">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+          </svg>
+          Prometheus
         </a>
-        <a href="https://github.com/piverine/WebhookDispatcher" target="_blank" style="color: var(--text-muted); text-decoration: none; font-size: 0.8rem; font-weight: 600;">
-          GitHub &rarr;
+        <a href="https://github.com/piverine/WebhookDispatcher" target="_blank" class="nav-link">
+          <svg class="svg-icon" viewBox="0 0 24 24">
+            <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+          </svg>
+          Repository
         </a>
       </div>
     </div>
   </header>
 
+  <!-- Main Grid Workspace -->
   <main>
-    <!-- Left Column: Test & Dispatch Panel -->
-    <div style="display: flex; flex-direction: column; gap: 1rem;">
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">🚀 Dispatch Webhook</div>
-          <span style="font-size: 0.7rem; color: var(--text-muted);">Non-blocking 202</span>
+    <!-- Left Column: Controls & Ingestion -->
+    <div class="panel-stack">
+      <!-- Dispatch Webhook Panel -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <svg class="svg-icon" viewBox="0 0 24 24">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+            Dispatch Webhook
+          </div>
+          <span class="panel-meta">HTTP 202 Ingest</span>
         </div>
 
-        <div style="margin-bottom: 0.65rem; font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Presets:</div>
-        <div class="presets">
-          <button class="btn-preset" onclick="setPreset('ok')">
-            ⚡ 200 OK Target
-            <span>Instant delivery success</span>
-          </button>
-          <button class="btn-preset" onclick="setPreset('flaky')">
-            🔄 Flaky Target
-            <span>Fails 2x &rarr; succeeds</span>
-          </button>
-          <button class="btn-preset" onclick="setPreset('fail')">
-            ❌ 500 Fail Target
-            <span>3 retries &rarr; failed</span>
-          </button>
-          <button class="btn-preset" onclick="setPreset('slow')">
-            ⏳ Slow Downstream
-            <span>10s wait (dispatch fast)</span>
-          </button>
-          <button class="btn-preset" onclick="runBatchTest()">
-            📦 5x Batch Ingest
-            <span>Multi-row atomic insert</span>
-          </button>
+        <div class="panel-body">
+          <div class="section-label">Target Scenarios</div>
+          <div class="preset-grid">
+            <button type="button" class="btn-preset" onclick="setPreset('ok')">
+              <span class="preset-name">
+                <svg class="svg-icon" style="color: var(--success);" viewBox="0 0 24 24">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+                200 OK Target
+              </span>
+              <span class="preset-desc">Instant delivery success</span>
+            </button>
+
+            <button type="button" class="btn-preset" onclick="setPreset('flaky')">
+              <span class="preset-name">
+                <svg class="svg-icon" style="color: var(--warning);" viewBox="0 0 24 24">
+                  <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+                </svg>
+                Flaky Target
+              </span>
+              <span class="preset-desc">Fails 2x &rarr; succeeds</span>
+            </button>
+
+            <button type="button" class="btn-preset" onclick="setPreset('fail')">
+              <span class="preset-name">
+                <svg class="svg-icon" style="color: var(--danger);" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="15" y1="9" x2="9" y2="15"></line>
+                  <line x1="9" y1="9" x2="15" y2="15"></line>
+                </svg>
+                500 Fail Target
+              </span>
+              <span class="preset-desc">3 retries &rarr; DLQ</span>
+            </button>
+
+            <button type="button" class="btn-preset" onclick="setPreset('slow')">
+              <span class="preset-name">
+                <svg class="svg-icon" style="color: var(--info);" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                Slow Target
+              </span>
+              <span class="preset-desc">10s downstream wait</span>
+            </button>
+          </div>
+
+          <form id="dispatchForm" onsubmit="handleDispatch(event)">
+            <div class="form-group">
+              <label for="destUrl">DESTINATION URL</label>
+              <input type="text" id="destUrl" spellcheck="false" required>
+            </div>
+
+            <div class="form-group">
+              <label for="eventId">EVENT ID (IDEMPOTENCY KEY)</label>
+              <input type="text" id="eventId" spellcheck="false" required>
+            </div>
+
+            <div class="form-group">
+              <label for="payload">PAYLOAD (JSON)</label>
+              <textarea id="payload" spellcheck="false" required></textarea>
+            </div>
+
+            <button type="submit" class="btn-submit" id="submitBtn">
+              <svg class="svg-icon" viewBox="0 0 24 24">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+              </svg>
+              <span>Dispatch Webhook</span>
+            </button>
+          </form>
+
+          <div id="dispatchResult" class="dispatch-result"></div>
         </div>
-
-        <form id="dispatchForm" onsubmit="handleDispatch(event)">
-          <div class="form-group">
-            <label for="destUrl">Destination URL</label>
-            <input type="text" id="destUrl" required>
-          </div>
-          <div class="form-group">
-            <label for="eventId">Event ID (Idempotency Key)</label>
-            <input type="text" id="eventId" required>
-          </div>
-          <div class="form-group">
-            <label for="payload">Payload (JSON)</label>
-            <textarea id="payload" required></textarea>
-          </div>
-          <button type="submit" class="btn-submit" id="submitBtn">
-            <span>Send Webhook</span>
-          </button>
-        </form>
-
-        <div id="dispatchResult" class="dispatch-result"></div>
       </div>
 
-      <!-- Quick Burst Test Card -->
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">🌊 Burst & Rate Limit Test</div>
+      <!-- Ingestion & Resilience Tests Panel -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <svg class="svg-icon" viewBox="0 0 24 24">
+              <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+              <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+              <line x1="6" y1="6" x2="6.01" y2="6"></line>
+              <line x1="6" y1="18" x2="6.01" y2="18"></line>
+            </svg>
+            Resilience & Batch Benchmarks
+          </div>
         </div>
-        <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.75rem;">
-          Fires 10 webhooks in rapid succession to test token bucket rate limiting (capacity: 5, refill: 2/s).
-        </p>
-        <button type="button" class="btn-preset" onclick="runBurstTest()" style="text-align: center; padding: 0.65rem;">
-          Trigger 10x Webhook Burst
-        </button>
+
+        <div class="panel-body">
+          <p style="font-size: 11.5px; color: var(--text-muted); margin-bottom: 0.85rem; line-height: 1.45;">
+            Evaluate distributed rate limiting (Token Bucket capacity 5, refill 2/s) and atomic multi-row batch ingestion.
+          </p>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+            <button type="button" class="btn-action" onclick="runBurstTest()" style="justify-content: center; padding: 0.5rem;">
+              <svg class="svg-icon" viewBox="0 0 24 24">
+                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+              </svg>
+              10x Burst Test
+            </button>
+
+            <button type="button" class="btn-action" onclick="runBatchTest()" style="justify-content: center; padding: 0.5rem;">
+              <svg class="svg-icon" viewBox="0 0 24 24">
+                <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                <polyline points="2 17 12 22 22 17"></polyline>
+                <polyline points="2 12 12 17 22 12"></polyline>
+              </svg>
+              5x Batch Ingest
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- Right Column: Live Jobs & Telemetry -->
-    <div style="display: flex; flex-direction: column; gap: 1rem;">
-      <div class="card" style="flex: 1;">
-        <div class="card-header">
-          <div class="card-title">📋 Live Queue & Dispatched Jobs</div>
-          <div style="display: flex; gap: 0.5rem; align-items: center;">
-            <select id="statusFilter" onchange="fetchJobs()" style="width: auto; padding: 0.25rem 0.5rem; font-size: 0.75rem;">
+    <!-- Right Column: Live Queue & Telemetry -->
+    <div class="panel-stack">
+      <!-- Live Queue Panel -->
+      <div class="panel" style="flex: 1;">
+        <div class="panel-header">
+          <div class="panel-title">
+            <svg class="svg-icon" viewBox="0 0 24 24">
+              <line x1="8" y1="6" x2="21" y2="6"></line>
+              <line x1="8" y1="12" x2="21" y2="12"></line>
+              <line x1="8" y1="18" x2="21" y2="18"></line>
+              <line x1="3" y1="6" x2="3.01" y2="6"></line>
+              <line x1="3" y1="12" x2="3.01" y2="12"></line>
+              <line x1="3" y1="18" x2="3.01" y2="18"></line>
+            </svg>
+            Live Queue & Dispatched Jobs
+          </div>
+
+          <div style="display: flex; gap: 0.4rem; align-items: center;">
+            <select id="statusFilter" onchange="fetchJobs()" style="width: auto; padding: 0.2rem 0.5rem; font-size: 11px;">
               <option value="">All Statuses</option>
               <option value="succeeded">Succeeded</option>
               <option value="retrying">Retrying</option>
@@ -496,25 +872,34 @@ export function getDashboardHtml(): string {
               <option value="processing">Processing</option>
               <option value="failed">Failed</option>
             </select>
-            <button onclick="fetchJobs()" class="btn-preset" style="padding: 0.3rem 0.6rem;">Refresh</button>
+            <button onclick="fetchJobs()" class="btn-action" style="padding: 0.2rem 0.5rem;">
+              <svg class="svg-icon" viewBox="0 0 24 24">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <polyline points="1 20 1 14 7 14"></polyline>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+              </svg>
+              Refresh
+            </button>
           </div>
         </div>
 
-        <div class="stats-row">
-          <div class="stat-pill">
-            <div class="stat-val" id="statTotal">0</div>
-            <div class="stat-label">Total Jobs</div>
+        <!-- Metric Telemetry Ribbon -->
+        <div class="metric-strip">
+          <div class="metric-cell">
+            <div class="metric-val" id="statTotal">0</div>
+            <div class="metric-label">Total Jobs</div>
           </div>
-          <div class="stat-pill">
-            <div class="stat-val" id="statSucceeded" style="color: var(--success);">0</div>
-            <div class="stat-label">Succeeded</div>
+          <div class="metric-cell">
+            <div class="metric-val" id="statSucceeded" style="color: var(--success);">0</div>
+            <div class="metric-label">Succeeded</div>
           </div>
-          <div class="stat-pill">
-            <div class="stat-val" id="statActive" style="color: var(--info);">0</div>
-            <div class="stat-label">In-Flight / Retry</div>
+          <div class="metric-cell">
+            <div class="metric-val" id="statActive" style="color: var(--primary);">0</div>
+            <div class="metric-label">In-Flight / Retry</div>
           </div>
         </div>
 
+        <!-- Table View -->
         <div class="table-container">
           <table>
             <thead>
@@ -522,8 +907,8 @@ export function getDashboardHtml(): string {
                 <th>Status</th>
                 <th>Event ID</th>
                 <th>Destination</th>
-                <th>Attempts</th>
-                <th>Time</th>
+                <th style="text-align: right;">Attempts</th>
+                <th style="text-align: right;">Time</th>
               </tr>
             </thead>
             <tbody id="jobsTableBody">
@@ -535,20 +920,35 @@ export function getDashboardHtml(): string {
         </div>
       </div>
 
-      <!-- Dead-Letter Queue (DLQ) Card -->
-      <div class="card">
-        <div class="card-header">
+      <!-- Dead-Letter Queue (DLQ) Panel -->
+      <div class="panel">
+        <div class="panel-header">
           <div style="display: flex; align-items: center; gap: 0.5rem;">
-            <div class="card-title">💀 Dead-Letter Queue (DLQ)</div>
+            <div class="panel-title">
+              <svg class="svg-icon" style="color: var(--danger);" viewBox="0 0 24 24">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                <line x1="12" y1="9" x2="12" y2="13"></line>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
+              Dead-Letter Queue (DLQ)
+            </div>
             <span id="dlqCountBadge" class="badge badge-failed">0 Dead Jobs</span>
           </div>
-          <button onclick="replayAllDlq()" class="btn-preset" style="padding: 0.3rem 0.6rem; color: #f87171; border-color: rgba(239, 68, 68, 0.4);">
-            🔄 Replay All DLQ
+
+          <button onclick="replayAllDlq()" class="btn-action btn-danger">
+            <svg class="svg-icon" viewBox="0 0 24 24">
+              <polyline points="23 4 23 10 17 10"></polyline>
+              <polyline points="1 20 1 14 7 14"></polyline>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+            Replay All DLQ
           </button>
         </div>
-        <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.75rem;">
-          Jobs that exhausted all 4 retry attempts or encountered non-retryable errors. 1-click redrive back into active queue.
-        </p>
+
+        <div style="padding: 0.75rem 1rem 0; font-size: 11.5px; color: var(--text-muted);">
+          Exhausted retry budget (4 attempts) or fatal non-retryable failures. Redrive reinstates job into worker execution.
+        </div>
+
         <div class="table-container" style="max-height: 220px; overflow-y: auto;">
           <table>
             <thead>
@@ -556,7 +956,7 @@ export function getDashboardHtml(): string {
                 <th>Event ID</th>
                 <th>Destination</th>
                 <th>Last Error</th>
-                <th>Action</th>
+                <th style="text-align: right;">Action</th>
               </tr>
             </thead>
             <tbody id="dlqTableBody">
@@ -570,11 +970,16 @@ export function getDashboardHtml(): string {
     </div>
   </main>
 
-  <!-- Job Detail Modal -->
+  <!-- Job Audit Detail Modal -->
   <div id="jobModal" class="modal-backdrop" onclick="closeModal(event)">
     <div class="modal" onclick="event.stopPropagation()">
       <div class="modal-header">
-        <div style="font-weight: 700; font-size: 0.95rem;">Job Audit Trail</div>
+        <div class="modal-title">
+          <svg class="svg-icon" viewBox="0 0 24 24">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+          </svg>
+          Job Audit Trail & Execution Timeline
+        </div>
         <button class="close-btn" onclick="closeModal()">&times;</button>
       </div>
       <div class="modal-body" id="modalContent">
@@ -596,7 +1001,7 @@ export function getDashboardHtml(): string {
       if (type === 'ok') {
         eventIdInput.value = 'evt_ok_' + now;
         destUrlInput.value = baseUrl + '/mock/receiver?mode=ok';
-        payloadInput.value = JSON.stringify({ event: 'order.created', amount: 99 }, null, 2);
+        payloadInput.value = JSON.stringify({ event: 'order.created', amount: 99.50, currency: 'USD' }, null, 2);
       } else if (type === 'flaky') {
         eventIdInput.value = 'evt_flaky_' + now;
         destUrlInput.value = baseUrl + '/mock/receiver?mode=flaky&failFirst=2';
@@ -619,15 +1024,20 @@ export function getDashboardHtml(): string {
       try {
         const res = await fetch('/health');
         const data = await res.json();
+        const dot = badge ? badge.querySelector('.status-dot') : null;
         if (data.ok) {
-          text.textContent = 'Neon DB Connected';
+          if (text) text.textContent = 'PostgreSQL Connected';
+          if (dot) {
+            dot.className = 'status-dot active';
+          }
         } else {
-          text.textContent = 'DB Unavailable';
-          badge.style.color = 'var(--danger)';
+          if (text) text.textContent = 'DB Unavailable';
+          if (dot) dot.className = 'status-dot err';
         }
       } catch (e) {
-        text.textContent = 'Offline';
-        badge.style.color = 'var(--danger)';
+        if (text) text.textContent = 'System Offline';
+        const dot = badge ? badge.querySelector('.status-dot') : null;
+        if (dot) dot.className = 'status-dot err';
       }
     }
 
@@ -665,9 +1075,8 @@ export function getDashboardHtml(): string {
 
         if (res.status === 202) {
           resultBox.className = 'dispatch-result success';
-          resultBox.textContent = \`Accepted 202 in \${elapsed}ms! \${data.duplicate ? '(Duplicate eventId)' : ''}\\nJob ID: \${data.jobId}\`;
+          resultBox.textContent = \`Accepted 202 in \${elapsed}ms \${data.duplicate ? '(Duplicate eventId)' : ''}\\nJob ID: \${data.jobId}\`;
           fetchJobs();
-          // generate new event ID
           document.getElementById('eventId').value = 'evt_' + Date.now();
         } else {
           resultBox.className = 'dispatch-result error';
@@ -683,10 +1092,6 @@ export function getDashboardHtml(): string {
 
     // Run Burst Test
     async function runBurstTest() {
-      const button = event.target;
-      button.disabled = true;
-      button.textContent = 'Bursting 10 events...';
-
       for (let i = 1; i <= 10; i++) {
         fetch('/api/webhooks/dispatch', {
           method: 'POST',
@@ -698,12 +1103,7 @@ export function getDashboardHtml(): string {
           })
         });
       }
-
-      setTimeout(() => {
-        button.disabled = false;
-        button.textContent = 'Trigger 10x Webhook Burst';
-        fetchJobs();
-      }, 500);
+      setTimeout(fetchJobs, 400);
     }
 
     // Fetch Jobs List
@@ -737,10 +1137,10 @@ export function getDashboardHtml(): string {
           return \`
             <tr onclick="inspectJob('\${job.jobId}')">
               <td><span class="badge badge-\${job.status}">\${job.status}</span></td>
-              <td class="mono" style="color: var(--primary);">\${job.eventId}</td>
-              <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-muted);">\${job.destinationUrl}</td>
-              <td class="mono">\${job.attemptCount}</td>
-              <td style="color: var(--text-muted);">\${date}</td>
+              <td class="mono" style="color: var(--text-main); font-weight: 500;">\${job.eventId}</td>
+              <td style="max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-muted);" class="mono">\${job.destinationUrl}</td>
+              <td class="mono" style="text-align: right;">\${job.attemptCount}</td>
+              <td class="mono" style="text-align: right; color: var(--text-muted);">\${date}</td>
             </tr>
           \`;
         }).join('');
@@ -761,42 +1161,42 @@ export function getDashboardHtml(): string {
         if (!res.ok) throw new Error("Job not found");
         const job = await res.json();
 
-        let attemptsHtml = '<div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 1rem;">Attempts Audit Trail:</div>';
+        let attemptsHtml = '<div style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); margin-bottom: 0.5rem;">Delivery Attempts Log</div>';
         if (job.attempts.length === 0) {
-          attemptsHtml += '<div style="color: var(--text-muted); font-size: 0.8rem;">No delivery attempts logged yet. Job is queued.</div>';
+          attemptsHtml += '<div style="color: var(--text-muted); font-size: 12px; padding: 0.5rem 0;">No delivery attempts logged yet. Job is queued.</div>';
         } else {
           attemptsHtml += job.attempts.map(a => \`
             <div class="timeline-item">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                <span class="badge badge-\${a.status === 'success' ? 'succeeded' : 'failed'}">Attempt #\${a.attempt} (\${a.status})</span>
-                <span style="font-size: 0.75rem; color: var(--text-muted);">\${new Date(a.at).toLocaleTimeString()}</span>
+                <span class="badge badge-\${a.status === 'success' ? 'succeeded' : 'failed'}">Attempt #\${a.attempt} &bull; \${a.status}</span>
+                <span class="mono" style="font-size: 11px; color: var(--text-muted);">\${new Date(a.at).toLocaleTimeString()}</span>
               </div>
-              <div style="font-size: 0.8rem; margin-top: 4px;">
-                HTTP Status: <strong>\${a.responseCode || 'Network Error / Timeout'}</strong> &bull; Duration: <strong>\${a.durationMs || 0}ms</strong>
+              <div class="mono" style="font-size: 11.5px; color: var(--text-main); margin-top: 4px;">
+                HTTP Status: <strong>\${a.responseCode || 'Network Timeout'}</strong> &bull; Latency: <strong>\${a.durationMs || 0}ms</strong>
               </div>
-              \${a.error ? \`<div style="color: #f87171; font-size: 0.75rem; font-family: monospace; margin-top: 4px;">Error: \${a.error}</div>\` : ''}
+              \${a.error ? \`<div style="color: #f87171; font-size: 11px; font-family: var(--font-mono); margin-top: 4px; background: rgba(239, 68, 68, 0.08); padding: 4px 6px; border-radius: 3px;">\${a.error}</div>\` : ''}
             </div>
           \`).join('');
         }
 
         content.innerHTML = \`
-          <div style="margin-bottom: 1rem;">
-            <div style="font-size: 0.75rem; color: var(--text-muted);">Job ID</div>
-            <div class="mono" style="word-break: break-all; color: var(--primary);">\${job.jobId}</div>
-          </div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
-            <div>
-              <div style="font-size: 0.75rem; color: var(--text-muted);">Event ID</div>
-              <div class="mono">\${job.eventId}</div>
+          <div class="audit-grid">
+            <div class="audit-item">
+              <div class="audit-label">Event ID</div>
+              <div class="mono" style="font-weight: 600;">\${job.eventId}</div>
             </div>
-            <div>
-              <div style="font-size: 0.75rem; color: var(--text-muted);">Current Status</div>
+            <div class="audit-item">
+              <div class="audit-label">Status</div>
               <div><span class="badge badge-\${job.status}">\${job.status}</span></div>
             </div>
           </div>
-          <div style="margin-bottom: 1.5rem;">
-            <div style="font-size: 0.75rem; color: var(--text-muted);">Destination</div>
-            <div style="font-size: 0.8rem; word-break: break-all;">\${job.destinationUrl}</div>
+          <div class="audit-item" style="margin-bottom: 1rem;">
+            <div class="audit-label">Job UUID</div>
+            <div class="mono" style="word-break: break-all; color: var(--text-muted);">\${job.jobId}</div>
+          </div>
+          <div class="audit-item" style="margin-bottom: 1rem;">
+            <div class="audit-label">Target Destination</div>
+            <div class="mono" style="word-break: break-all; color: var(--primary);">\${job.destinationUrl}</div>
           </div>
           \${attemptsHtml}
         \`;
@@ -827,11 +1227,11 @@ export function getDashboardHtml(): string {
 
         tbody.innerHTML = data.jobs.map(j => \`
           <tr>
-            <td class="mono" style="color: #f87171;">\${j.eventId}</td>
-            <td style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-muted);">\${j.destinationUrl}</td>
-            <td style="font-size: 0.72rem; color: #f87171; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">\${j.lastError || 'Failed'}</td>
-            <td>
-              <button onclick="replayDlqJob('\${j.jobId}')" class="btn-preset" style="padding: 0.2rem 0.5rem; font-size: 0.7rem; color: #34d399; border-color: rgba(16, 185, 129, 0.4);">
+            <td class="mono" style="color: #f87171; font-weight: 500;">\${j.eventId}</td>
+            <td style="max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-muted);" class="mono">\${j.destinationUrl}</td>
+            <td style="font-size: 11px; color: #f87171; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" class="mono">\${j.lastError || 'Retry Exhausted'}</td>
+            <td style="text-align: right;">
+              <button onclick="replayDlqJob('\${j.jobId}')" class="btn-action btn-success" style="padding: 0.15rem 0.45rem;">
                 Redrive
               </button>
             </td>
@@ -897,11 +1297,9 @@ export function getDashboardHtml(): string {
       try {
         const source = new EventSource('/api/webhooks/stream');
         source.addEventListener('connected', () => {
-          if (sseText) sseText.textContent = 'SSE Live (Real-Time)';
-          if (sseBadge) {
-            sseBadge.style.color = '#34d399';
-            sseBadge.style.borderColor = 'rgba(16, 185, 129, 0.3)';
-          }
+          if (sseText) sseText.textContent = 'SSE Live';
+          const dot = sseBadge ? sseBadge.querySelector('.status-dot') : null;
+          if (dot) dot.className = 'status-dot active';
         });
 
         const onEvent = () => {
@@ -918,15 +1316,18 @@ export function getDashboardHtml(): string {
         source.addEventListener('circuit:tripped', onEvent);
 
         source.onerror = () => {
-          if (sseText) sseText.textContent = 'SSE Reconnecting...';
-          if (sseBadge) sseBadge.style.color = '#fbbf24';
+          if (sseText) sseText.textContent = 'SSE Reconnecting';
+          const dot = sseBadge ? sseBadge.querySelector('.status-dot') : null;
+          if (dot) dot.className = 'status-dot warn';
         };
       } catch (e) {
-        if (sseText) sseText.textContent = 'SSE Disabled';
+        if (sseText) sseText.textContent = 'SSE Offline';
+        const dot = sseBadge ? sseBadge.querySelector('.status-dot') : null;
+        if (dot) dot.className = 'status-dot err';
       }
     }
 
-    // Init
+    // Initialize
     setPreset('ok');
     checkHealth();
     fetchJobs();
@@ -939,4 +1340,3 @@ export function getDashboardHtml(): string {
 </body>
 </html>`;
 }
-
